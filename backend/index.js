@@ -5,16 +5,15 @@ const PORT = 5000;
 const socketIo = require('socket.io');
 app.use(express.json());
 app.use((req, res, next) => {
-    res.setHeader('Access-Control-Allow-Origin', 'https://edw-project-v1-1.onrender.com');
+    res.setHeader('Access-Control-Allow-Origin', 'https://edw-tfub.onrender.com');
     // Add other CORS headers as needed
     next();
-  });
+});
 
-//#region socket set up
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "https://edw-project-v1-1.onrender.com/",
+        origin: "https://edw-tfub.onrender.com",
         methods: ["GET", "POST"],
     },
 });
