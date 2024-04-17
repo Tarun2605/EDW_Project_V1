@@ -9,7 +9,7 @@ app.use(express.json());
 const server = http.createServer(app);
 const io = socketIo(server, {
     cors: {
-        origin: "http://localhost:3000",
+        origin: "https://edw-project-v1-1.onrender.com/",
         methods: ["GET", "POST"],
     },
 });
