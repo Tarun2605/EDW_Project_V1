@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 var socket;
 
 function App() {
-  const ENDPOINT = 'http://localhost:5000';
+  const ENDPOINT = 'https://edw-tfub.onrender.com';
   socket = io(ENDPOINT);
   useEffect(() => {
     try {
