@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+
 import './App.css';
 import io from 'socket.io-client';
 // import io from "socket.io-client";
@@ -7,7 +7,7 @@ import { useEffect } from 'react';
 var socket;
 
 function App() {
-  const ENDPOINT = 'https://edw-tfub.onrender.com/';
+  const ENDPOINT = 'https://edw-tfub.onrender.com';
   socket = io(ENDPOINT);
   useEffect(() => {
     try {
