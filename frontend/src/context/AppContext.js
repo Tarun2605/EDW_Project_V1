@@ -7,6 +7,8 @@ export default function AppcontextProvider({children}){
     const [teamWin, setTeamWin] = useState("none");
     const [TableTennisTeamA, setTableTennisTeamA] = useState({score:0, set:0});
     const [TableTennisTeamB, setTableTennisTeamB] = useState({score:0, set:0});
+    const [BadmintonTeamA, setBadmintonTeamA] = useState({score:0, set:0});
+    const [BadmintonTeamB, setBadmintonTeamB] = useState({score:0, set:0});
 
     function resetTableTennis(){
         setTableTennisTeamA({score:0, set:0});
@@ -23,6 +25,10 @@ export default function AppcontextProvider({children}){
         TableTennisTeamB,
         setTableTennisTeamB,
         resetTableTennis,
+        BadmintonTeamA,
+        setBadmintonTeamA,
+        BadmintonTeamB,
+        setBadmintonTeamB,
     };
 
     return (

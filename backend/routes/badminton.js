@@ -4,17 +4,17 @@ const router = express.Router();
 
 router.get('/', (req, res) => {
     res.status(200);
-    res.send("Welcome to Table Tennis API");
+    res.send("Welcome to Badminton API");
 });
 
 //#region Team A
 router.get('/teamA/inc', (req, res) => {
     try {
-        const {teamAinc} = require('../controllers/tableTennis');
+        const {teamAinc} = require('../controllers/badminton');
         teamAinc(req, res);
     } catch (error) {
         res.status(500);
-        res.send("Error occurred while updating score for Team A");
+        res.send("Error occurred while updating score for badminton of Team A");
     }
 });
 
@@ -23,11 +23,13 @@ router.get('/teamA/inc', (req, res) => {
 //#region Team B
 router.get('/teamB/inc', (req, res) => {
     try {
-        const {teamBinc} = require('../controllers/tableTennis');
+        const {teamBinc} = require('../controllers/badminton');
         teamBinc(req, res);
+        
     } catch (error) {
         res.status(500);
-        res.send("Error occurred while updating score for tableTennis of Team B");
+        res.send("Error occurred while updating score for badminton of Team B");
+        
     }
 });
 

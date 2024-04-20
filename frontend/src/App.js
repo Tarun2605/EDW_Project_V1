@@ -13,10 +13,10 @@ import { Appcontext } from './context/AppContext';
 var socket;
 
 function App() {
-  const ENDPOINT = 'https://edw-tfub.onrender.com';
-  // const ENDPOINT = 'http://localhost:5000';
+  // const ENDPOINT = 'https://edw-tfub.onrender.com';
+  const ENDPOINT = 'http://localhost:5000';
   socket = io(ENDPOINT);
-  let {setTableTennisTeamA, setTableTennisTeamB,teamWin,selectedGame,setTeamWin} = useContext(Appcontext);
+  let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, } = useContext(Appcontext);
   useEffect(() => {
     try {
       socket.on('connect', () => {
@@ -33,23 +33,55 @@ function App() {
       console.log("Error occurred while connecting to server", error);
     }
   }
-  , [ENDPOINT]);
+    , [ENDPOINT]);
   socket.on('TennisScoreUpdate', (score) => {
-    // console.log(score);
-    console.log(teamWin);
-    setTableTennisTeamA(score.data.teamA);
-    setTableTennisTeamB(score.data.teamB);
-    if (!(teamWin=="A" || teamWin=="B")){
-      setTeamWin("None");
-      // console.log("object");
-    }
-    
-      if (score.data.teamA.set >=2 || score.data.teamB.set >=2){
+    try {
+
+      console.log(teamWin);
+      setTableTennisTeamA(score.data.teamA);
+      setTableTennisTeamB(score.data.teamB);
+      if (!(teamWin == "A" || teamWin == "B")) {
+        setTeamWin("None");
+        // console.log("object");
+      }
+
+      if (score.data.teamA.set >= 2 || score.data.teamB.set >= 2) {
         setTeamWin(score.data.teamA.set > score.data.teamB.set ? 'A' : 'B');
       }
-    
-    if (selectedGame !== 'tableTennis'){
-      selectedGame = 'tableTennis';
+
+      if (selectedGame !== 'tableTennis') {
+        setSelectedGame('tableTennis');
+      }
+    } catch (error) {
+      console.log('Error occurred while updating score for Team A ', error.message);
+    }
+    // console.log(score);
+  }
+  );
+  socket.on('BadmintonScoreUpdate', (score) => {
+    try {
+
+      console.log(score);
+      // console.log(teamWin);
+      setBadmintonTeamA(score.data.teamA);
+      setBadmintonTeamB(score.data.teamB);
+      if (!(teamWin == "A" || teamWin == "B")) {
+        setTeamWin("None");
+        // console.log("object");
+      }
+      if (selectedGame != 'badminton') {
+        setSelectedGame('badminton');
+      }
+      if (score.data.teamA.set >= 2 || score.data.teamB.set >= 2) {
+        setTeamWin(score.data.teamA.set > score.data.teamB.set ? 'A' : 'B');
+      }
+      // console.log(selectedGame);
+      // setTableTennisTeamA(score.data.teamA);
+      // setTableTennisTeamB(score.data.teamB);
+
+    } catch (error) {
+      console.log('Error occurred while updating score for Team A ', error.message);
+
     }
   }
   );

@@ -48,4 +48,5 @@ app.use('/config/bootUp', (req, res)=>{
 });
 
 app.use('/game/tableTennis', require('./routes/tableTennis'));
+app.use('/game/badminton', require('./routes/badminton'));
 
