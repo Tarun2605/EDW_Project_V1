@@ -1,0 +1,28 @@
+.team-win-cont {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 84vh;
+    width: 100%;
+    font-size: 2rem;
+    color: #333;
+    font-weight: 600;
+    text-align: center;
+    /* padding: 0 2rem; */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    animation-name: TeamWinAppear;
+    animation-duration: 1s;
+    animation-fill-mode: forwards;
+    animation-iteration-count: 1;
+}
+
+@keyframes TeamWinAppear {
+    0% {
+        opacity: 0;
+    }
+    100% {
+        opacity: 1;
+    }
+}

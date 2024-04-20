@@ -15,16 +15,23 @@ const io = socketIo(server, {
 });
 
 io.on("connection", (socket) => {
-    console.log("New client connected");
-
+    // console.log("New client connected");
+    
     socket.on("disconnect", () => {
         // your code here
     });
 });
-module.exports = {io,server}; 
+function sendViaSocket(message,data){
+    io.emit(message,data);
+}
+module.exports = {sendViaSocket};
+// module.exports = {io,server}; 
 //#endregion
 
 server.listen(5000, () => console.log(`Listening on port ${PORT}`));
+
+const dbconnect=require("./config/database");
+dbconnect();
 
 app.get('/', (req, res)=>{ 
 	res.status(200); 
