@@ -13,8 +13,8 @@ import { Appcontext } from './context/AppContext';
 var socket;
 
 function App() {
-  // const ENDPOINT = 'https://edw-tfub.onrender.com';
-  const ENDPOINT = 'http://localhost:5000';
+  const ENDPOINT = 'https://edw-tfub.onrender.com';
+  // const ENDPOINT = 'http://localhost:5000';
   socket = io(ENDPOINT);
   let {setTableTennisTeamA, setTableTennisTeamB,teamWin,selectedGame,setTeamWin} = useContext(Appcontext);
   useEffect(() => {
@@ -35,7 +35,7 @@ function App() {
   }
   , [ENDPOINT]);
   socket.on('TennisScoreUpdate', (score) => {
-    console.log(score);
+    // console.log(score);
     console.log(teamWin);
     setTableTennisTeamA(score.data.teamA);
     setTableTennisTeamB(score.data.teamB);
