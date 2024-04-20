@@ -1,7 +1,7 @@
 const mongoose=require("mongoose");
 require("dotenv").config();
 const dbconnect=()=>{
-    mongoose.connect(process.env.DATABASE_URL,{
+    mongoose.connect("mongodb+srv://steelandmasterquantor:Qm6LEmbrVZLQ2CCc@edwgamev1.2jiloro.mongodb.net/",{
         useNewUrlParser:true,
         useUnifiedTopology: true,
     })
