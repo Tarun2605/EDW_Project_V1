@@ -22,6 +22,7 @@ io.on("connection", (socket) => {
     });
 });
 function sendViaSocket(message,data){
+    console.log('message emitting');
     io.emit(message,data);
 }
 module.exports = {sendViaSocket};
@@ -49,4 +50,4 @@ app.use('/config/bootUp', (req, res)=>{
 
 app.use('/game/tableTennis', require('./routes/tableTennis'));
 app.use('/game/badminton', require('./routes/badminton'));
-
+app.use('/game/hockey', require('./routes/hockey'));
