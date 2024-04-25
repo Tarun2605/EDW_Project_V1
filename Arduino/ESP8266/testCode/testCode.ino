@@ -1,255 +1,276 @@
-/*********
-  Rui Santos
-  Complete instructions at https://RandomNerdTutorials.com/esp8266-nodemcu-wi-fi-manager-asyncwebserver/
-  
-  Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files.
-  The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-*********/
-
-#include <Arduino.h>
 #include <ESP8266WiFi.h>
-#include <ESPAsyncWebServer.h>
-#include <ESPAsyncTCP.h>
-#include "LittleFS.h"
+#include <ESP8266WebServer.h>
+#include <Arduino.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClientSecureBearSSL.h>
+#include <SoftwareSerial.h>
 
-// Create AsyncWebServer object on port 80
-AsyncWebServer server(80);
+const char* ssid = "ESP8266_AP";     // SSID for the Access Point
+const char* password = "password";   // Password for the Access Point
 
-// Search for parameter in HTTP POST request
-const char* PARAM_INPUT_1 = "ssid";
-const char* PARAM_INPUT_2 = "pass";
-const char* PARAM_INPUT_3 = "ip";
-const char* PARAM_INPUT_4 = "gateway";
+ESP8266WebServer server(80);
+char* ipp="";
+const char* apiUrl = "https://edw-tfub.onrender.com/"; // Change to your API endpoint
 
-//Variables to save values from HTML form
-String ssid;
-String pass;
-String ip;
-String gateway;
+int redPin = D0;
+int greenPin = D1;
+int bluePin = D2;
 
-// File paths to save input values permanently
-const char* ssidPath = "/ssid.txt";
-const char* passPath = "/pass.txt";
-const char* ipPath = "/ip.txt";
-const char* gatewayPath = "/gateway.txt";
-
-IPAddress localIP;
-//IPAddress localIP(192, 168, 1, 200); // hardcoded
-
-// Set your Gateway IP address
-IPAddress localGateway;
-//IPAddress localGateway(192, 168, 1, 1); //hardcoded
-IPAddress subnet(255, 255, 0, 0);
-
-// Timer variables
-unsigned long previousMillis = 0;
-const long interval = 10000;  // interval to wait for Wi-Fi connection (milliseconds)
-
-// Set LED GPIO
-const int ledPin = 2;
-// Stores LED state
-
-String ledState;
-
-boolean restart = false;
-
-// Initialize LittleFS
-void initFS() {
-  if (!LittleFS.begin()) {
-    Serial.println("An error has occurred while mounting LittleFS");
-  }
-  else{
-    Serial.println("LittleFS mounted successfully");
-  }
+void setColor(int redValue, int greenValue, int blueValue) {
+  analogWrite(redPin, redValue);
+  analogWrite(greenPin, greenValue);
+  analogWrite(bluePin, blueValue);
 }
 
+bool callAPI(String url) {
+  Serial.println(url);
+  std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
 
-// Read File from LittleFS
-String readFile(fs::FS &fs, const char * path){
-  Serial.printf("Reading file: %s\r\n", path);
+  // Ignore SSL certificate validation
+  client->setInsecure();
 
-  File file = fs.open(path, "r");
-  if(!file || file.isDirectory()){
-    Serial.println("- failed to open file for reading");
-    return String();
-  }
+  // Create an HTTPClient instance
+  HTTPClient https;
 
-  String fileContent;
-  while(file.available()){
-    fileContent = file.readStringUntil('\n');
-    break;
-  }
-  file.close();
-  return fileContent;
-}
+  // Initializing an HTTPS communication using the secure client
+  Serial.print("[HTTPS] begin...\n");
+  if (https.begin(*client, url)) {  // HTTPS
+    Serial.print("[HTTPS] GET...\n");
+    // Start connection and send HTTP header
+    int httpCode = https.GET();
+    // httpCode will be negative on error
+    if (httpCode > 0) {
+      // HTTP header has been sent and Server response header has been handled
+      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      // File found at server
+      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        String payload = https.getString();
+        Serial.println(payload);
+        https.end();
+        return true; // API call successful
+      }
+    } else {
+      Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+    }
 
-// Write file to LittleFS
-void writeFile(fs::FS &fs, const char * path, const char * message){
-  Serial.printf("Writing file: %s\r\n", path);
-
-  File file = fs.open(path, "w");
-  if(!file){
-    Serial.println("- failed to open file for writing");
-    return;
-  }
-  if(file.print(message)){
-    Serial.println("- file written");
+    https.end();
   } else {
-    Serial.println("- frite failed");
+    Serial.printf("[HTTPS] Unable to connect\n");
   }
-  file.close();
+
+  return false; // API call failed
 }
 
-// Initialize WiFi
-bool initWiFi() {
-  if(ssid=="" || ip==""){
-    Serial.println("Undefined SSID or IP address.");
-    return false;
+void handleRoot() {
+  String content = "<!DOCTYPE html>\n"
+                   "<html>\n"
+                   "<head>\n"
+                   "  <title>ESP Wi-Fi Manager</title>\n"
+                   "  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n"
+                   "  <link rel=\"icon\" href=\"data:,\">\n"
+                   "  <link rel=\"stylesheet\" href=\"https://use.fontawesome.com/releases/v5.7.2/css/all.css\" integrity=\"sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr\" crossorigin=\"anonymous\">\n"
+                   "  <style>\n"
+                   "    html {\n"
+                   "    font-family: Arial, Helvetica, sans-serif; \n"
+                   "    display: inline-block; \n"
+                   "    text-align: center;\n"
+                   "  }\n"
+                   "  \n"
+                   "  h1 {\n"
+                   "    font-size: 1.8rem; \n"
+                   "    color: white;\n"
+                   "  }\n"
+                   "  \n"
+                   "  p { \n"
+                   "    font-size: 1.4rem;\n"
+                   "  }\n"
+                   "  \n"
+                   "  .topnav { \n"
+                   "    overflow: hidden; \n"
+                   "    background-color: #0A1128;\n"
+                   "  }\n"
+                   "  \n"
+                   "  body {  \n"
+                   "    margin: 0;\n"
+                   "  }\n"
+                   "  \n"
+                   "  .content { \n"
+                   "    padding: 5%;\n"
+                   "  }\n"
+                   "  \n"
+                   "  .card-grid { \n"
+                   "    max-width: 800px; \n"
+                   "    margin: 0 auto; \n"
+                   "    display: grid; \n"
+                   "    grid-gap: 2rem; \n"
+                   "    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));\n"
+                   "  }\n"
+                   "  \n"
+                   "  .card { \n"
+                   "    background-color: white; \n"
+                   "    box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);\n"
+                   "  }\n"
+                   "  \n"
+                   "  .card-title { \n"
+                   "    font-size: 1.2rem;\n"
+                   "    font-weight: bold;\n"
+                   "    color: #034078\n"
+                   "  }\n"
+                   "  \n"
+                   "  input[type=submit] {\n"
+                   "    border: none;\n"
+                   "    color: #FEFCFB;\n"
+                   "    background-color: #034078;\n"
+                   "    padding: 15px 15px;\n"
+                   "    text-align: center;\n"
+                   "    text-decoration: none;\n"
+                   "    display: inline-block;\n"
+                   "    font-size: 16px;\n"
+                   "    width: 100px;\n"
+                   "    margin-right: 10px;\n"
+                   "    border-radius: 4px;\n"
+                   "    transition-duration: 0.4s;\n"
+                   "    }\n"
+                   "  \n"
+                   "  input[type=submit]:hover {\n"
+                   "    background-color: #1282A2;\n"
+                   "  }\n"
+                   "  \n"
+                   "  input[type=text], input[type=number], select {\n"
+                   "    width: 50%;\n"
+                   "    padding: 12px 20px;\n"
+                   "    margin: 18px;\n"
+                   "    display: inline-block;\n"
+                   "    border: 1px solid #ccc;\n"
+                   "    border-radius: 4px;\n"
+                   "    box-sizing: border-box;\n"
+                   "  }\n"
+                   "  \n"
+                   "  label {\n"
+                   "    font-size: 1.2rem; \n"
+                   "  }\n"
+                   "  .value{\n"
+                   "    font-size: 1.2rem;\n"
+                   "    color: #1282A2;  \n"
+                   "  }\n"
+                   "  .state {\n"
+                   "    font-size: 1.2rem;\n"
+                   "    color: #1282A2;\n"
+                   "  }\n"
+                   "  button {\n"
+                   "    border: none;\n"
+                   "    color: #FEFCFB;\n"
+                   "    padding: 15px 32px;\n"
+                   "    text-align: center;\n"
+                   "    font-size: 16px;\n"
+                   "    width: 100px;\n"
+                   "    border-radius: 4px;\n"
+                   "    transition-duration: 0.4s;\n"
+                   "  }\n"
+                   "  .button-on {\n"
+                   "    background-color: #034078;\n"
+                   "  }\n"
+                   "  .button-on:hover {\n"
+                   "    background-color: #1282A2;\n"
+                   "  }\n"
+                   "  .button-off {\n"
+                   "    background-color: #858585;\n"
+                   "  }\n"
+                   "  .button-off:hover {\n"
+                   "    background-color: #252524;\n"
+                   "  } \n"
+                   "  </style>\n"
+                   "</head>\n"
+                   "<body>\n"
+                   "  <div class=\"topnav\">\n"
+                   "    <h1>ESP Wi-Fi Manager</h1>\n"
+                   "  </div>\n"
+                   "  <div class=\"content\">\n"
+                   "    <div class=\"card-grid\">\n"
+                   "      <div class=\"card\">\n"
+                   "        <form action=\"/connect\" method=\"POST\">\n"
+                   "          <p>\n"
+                   "            <label for=\"ssid\">SSID</label>\n"
+                   "            <select id=\"ssid\" name=\"ssid\">\n";
+
+  int numNetworks = WiFi.scanNetworks();
+  for (int i = 0; i < numNetworks; ++i) {
+    String ssid = WiFi.SSID(i);
+    bool isOpen = WiFi.encryptionType(i) == ENC_TYPE_NONE;
+    if (isOpen) {
+      content += "<option style=\"color:green;\" value=\"" + ssid + "\">" + ssid + "</option>\n";
+    } else {
+      content += "<option value=\"" + ssid + "\">" + ssid + "</option>\n";
+    }
   }
 
-  WiFi.mode(WIFI_STA);
-  localIP.fromString(ip.c_str());
-  localGateway.fromString(gateway.c_str());
+  content += "            </select><br>\n"
+             "            <label for=\"pass\">Password</label>\n"
+             "            <input type=\"text\" id =\"pass\" name=\"pass\"><br>\n"
+             "            <input type =\"submit\" value =\"Connect\">\n"
+             "          </p>\n"
+             "        </form>\n"
+             "      </div>\n"
+             "    </div>\n"
+             "  </div>\n"
+             "</body>\n"
+             "</html>";
 
-  if (!WiFi.config(localIP, localGateway, subnet)){
-    Serial.println("STA Failed to configure");
-    return false;
-  }
+  server.send(200, "text/html", content);
+}
+
+void handleConnect() {
+  String ssid = server.arg("ssid");
+  String pass = server.arg("pass");
+
+  // Connect to WiFi
   WiFi.begin(ssid.c_str(), pass.c_str());
 
-  Serial.println("Connecting to WiFi...");
-  delay(20000);
-  if(WiFi.status() != WL_CONNECTED) {
-    Serial.println("Failed to connect.");
-    return false;
+  // Wait for connection
+  setColor(0, 0, 255);
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(1000);
+    Serial.println("Connecting to WiFi...");
   }
 
-  Serial.println(WiFi.localIP());
-  return true;
-}
-
-// Replaces placeholder with LED state value
-String processor(const String& var) {
-  if(var == "STATE") {
-    if(!digitalRead(ledPin)) {
-      ledState = "ON";
-    }
-    else {
-      ledState = "OFF";
-    }
-    return ledState;
+  Serial.println("Connected to WiFi");
+  Serial.print("IP Address: ");
+  if (callAPI(apiUrl)) {
+    setColor(0,0,0);
+    delay(500);
+    setColor(0, 255, 0); // Green Color
   }
-  return String();
+ IPAddress ip = WiFi.localIP();
+  String ipAddress = String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
+  ipp = (char*) ipAddress.c_str();
+  Serial.println(ipAddress);
+
+  // Redirect to a different page after connecting
+  server.sendHeader("Location", "/", true);
+  server.send(302, "text/plain", "");
 }
 
 void setup() {
-  // Serial port for debugging purposes
   Serial.begin(115200);
-
-  initFS();
-
-  // Set GPIO 2 as an OUTPUT
-  pinMode(ledPin, OUTPUT);
-  digitalWrite(ledPin, LOW);
-  
-  // Load values saved in LittleFS
-  ssid = readFile(LittleFS, ssidPath);
-  pass = readFile(LittleFS, passPath);
-  ip = readFile(LittleFS, ipPath);
-  gateway = readFile (LittleFS, gatewayPath);
-  Serial.println(ssid);
-  Serial.println(pass);
-  Serial.println(ip);
-  Serial.println(gateway);
-
-  if(initWiFi()) {
-    // Route for root / web page
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-      request->send(LittleFS, "/index.html", "text/html", false, processor);
-    });
-    
-    server.serveStatic("/", LittleFS, "/");
-    
-    // Route to set GPIO state to HIGH
-    server.on("/on", HTTP_GET, [](AsyncWebServerRequest *request) {
-      digitalWrite(ledPin, LOW);
-      request->send(LittleFS, "/index.html", "text/html", false, processor);
-    });
-
-    // Route to set GPIO state to LOW
-    server.on("/off", HTTP_GET, [](AsyncWebServerRequest *request) {
-      digitalWrite(ledPin, HIGH);
-      request->send(LittleFS, "/index.html", "text/html", false, processor);
-    });
-    server.begin();
-  }
-  else {
-    // Connect to Wi-Fi network with SSID and password
-    Serial.println("Setting AP (Access Point)");
-    // NULL sets an open Access Point
-    WiFi.softAP("ESP-WIFI-MANAGER", NULL);
-
-    IPAddress IP = WiFi.softAPIP();
-    Serial.print("AP IP address: ");
-    Serial.println(IP); 
-
-    // Web Server Root URL
-    server.on("/", HTTP_GET, [](AsyncWebServerRequest *request){
-      request->send(LittleFS, "/wifimanager.html", "text/html");
-    });
-    
-    server.serveStatic("/", LittleFS, "/");
-    
-    server.on("/", HTTP_POST, [](AsyncWebServerRequest *request) {
-      int params = request->params();
-      for(int i=0;i<params;i++){
-        AsyncWebParameter* p = request->getParam(i);
-        if(p->isPost()){
-          // HTTP POST ssid value
-          if (p->name() == PARAM_INPUT_1) {
-            ssid = p->value().c_str();
-            Serial.print("SSID set to: ");
-            Serial.println(ssid);
-            // Write file to save value
-            writeFile(LittleFS, ssidPath, ssid.c_str());
-          }
-          // HTTP POST pass value
-          if (p->name() == PARAM_INPUT_2) {
-            pass = p->value().c_str();
-            Serial.print("Password set to: ");
-            Serial.println(pass);
-            // Write file to save value
-            writeFile(LittleFS, passPath, pass.c_str());
-          }
-          // HTTP POST ip value
-          if (p->name() == PARAM_INPUT_3) {
-            ip = p->value().c_str();
-            Serial.print("IP Address set to: ");
-            Serial.println(ip);
-            // Write file to save value
-            writeFile(LittleFS, ipPath, ip.c_str());
-          }
-          // HTTP POST gateway value
-          if (p->name() == PARAM_INPUT_4) {
-            gateway = p->value().c_str();
-            Serial.print("Gateway set to: ");
-            Serial.println(gateway);
-            // Write file to save value
-            writeFile(LittleFS, gatewayPath, gateway.c_str());
-          }
-          //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
-        }
-      }
-      restart = true;
-      request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
-    });
-    server.begin();
-  }
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+  // Set ESP8266 as an access point
+  IPAddress apIP(192, 168, 4, 1);
+  WiFi.softAPConfig(apIP, apIP, IPAddress(255, 255, 255, 0));
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(ssid, password);
+  Serial.println("Access Point started");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.softAPIP());
+  setColor(255,0,0);
+  // Start the server
+  server.on("/", handleRoot);
+  server.on("/connect", handleConnect);
+  server.begin();
+  Serial.println("HTTP server started");
 }
 
 void loop() {
-  if (restart){
-    delay(5000);
-    ESP.restart();
-  }
+  server.handleClient();
 }
