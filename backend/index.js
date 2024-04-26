@@ -4,6 +4,12 @@ const app = express();
 const PORT = 5000; 
 const socketIo = require('socket.io');
 app.use(express.json());
+var cors = require('cors');
+var corsOptions = {
+    origin: 'https://edw-project-v1-1.onrender.com',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions));
 
 //#region socket set up
 const server = http.createServer(app);
