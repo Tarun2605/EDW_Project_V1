@@ -2,8 +2,9 @@
 import './App.css';
 import io from 'socket.io-client';
 // import io from "socket.io-client";
-import { useContext, useEffect } from 'react';
+// import { useContext, useEffect } from 'react';
 import { Routes, Route } from 'react-router';
+import { useContext, useEffect } from 'react';
 import Home from './pages/Home';
 import Navbar from './components/Navbar';
 import Arduino from './components/Arduino';
@@ -14,11 +15,11 @@ import SocketReciever from './utils/Socket';
 
 
 function App() {
+  let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
+    setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
   useEffect(() => {
     const fetchAllData= async()=>{
       try {
-        let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
-          setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
         const response = await fetch('https://edw-tfub.onrender.com/config/getAllData');
         const data = await response.json();
         console.log('Data fetched successfully ', data);
