@@ -4,8 +4,8 @@ import io from 'socket.io-client';
 import { useContext, useEffect } from 'react';
 import { Appcontext } from '../context/AppContext';
 export default function SocketReciever() {
-    // const ENDPOINT = 'https://edw-tfub.onrender.com';
-    const ENDPOINT = 'http://localhost:5000';
+    const ENDPOINT = 'https://edw-tfub.onrender.com';
+    // const ENDPOINT = 'http://localhost:5000';
     var socket = io(ENDPOINT);
     let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
         setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
