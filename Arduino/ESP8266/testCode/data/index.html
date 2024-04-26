@@ -1,27 +1,155 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <title>ESP WEB SERVER</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="style.css">
-    <link rel="icon" type="image/png" href="favicon.png">
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-  </head>
-  <body>
-    <div class="topnav">
-      <h1>ESP WEB SERVER</h1>
-    </div>
-    <div class="content">
-      <div class="card-grid">
-        <div class="card">
-          <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 2</p>
-          <p>
-            <a href="on"><button class="button-on">ON</button></a>
-            <a href="off"><button class="button-off">OFF</button></a>
-          </p>
-          <p class="state">State: %STATE%</p>
-        </div>
+
+<head>
+  <title>ESP IOT DASHBOARD</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="favicon.png">
+  <style>
+    html {
+      font-family: Arial, Helvetica, sans-serif;
+      display: inline-block;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      color: white;
+    }
+
+    .topnav {
+      overflow: hidden;
+      background-color: #0A1128;
+    }
+
+    body {
+      margin: 0;
+    }
+
+    .content {
+      padding: 50px;
+    }
+
+    .card-grid {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-gap: 2rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    }
+
+    .card {
+      background-color: white;
+      box-shadow: 2px 2px 12px 1px rgba(140, 140, 140, .5);
+    }
+
+    .card-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #034078;
+    }
+
+    .reading {
+      font-size: 1.2rem;
+      color: #1282A2;
+    }
+  </style>
+
+
+</head>
+
+<body>
+  <div class="topnav">
+    <h1>SENSOR READINGS (WEBSOCKET)</h1>
+  </div>
+  <div class="content">
+    <div class="card-grid">
+      <div class="card">
+        <p class="card-title"> Temperature</p>
+        <p class="reading"><span id="temperature"></span> &deg;C</p>
+      </div>
+      <div class="card">
+        <p class="card-title"> Humidity</p>
+        <p class="reading"><span id="humidity"></span> &percnt;</p>
+      </div>
+      <div class="card">
+        <p class="card-title"> Pressure</p>
+        <p class="reading"><span id="pressure"></span> hpa</p>
       </div>
     </div>
-  </body>
+    <div class="console-cont">
+      <div class="console">
+        <p>Console:</p>
+        <div id="console"></div>
+      </div>
+    </div>
+  </div>
+  <script>
+
+    var gateway = `ws://${window.location.hostname}/ws`;
+    var websocket;
+    // Init web socket when the page loads
+    window.addEventListener('load', onload);
+
+    function onload(event) {
+      initWebSocket();
+    }
+
+    function getReadings() {
+      websocket.send("getReadings");
+    }
+    function logToConsole(message) {
+      // Get the console element
+      const consoleElement = document.getElementById('console');
+
+      // Create a new paragraph element
+      const p = document.createElement('p');
+
+      // Set the text of the paragraph to the message
+      p.textContent = message;
+
+      // Append the paragraph to the console
+      consoleElement.appendChild(p);
+    }
+    function initWebSocket() {
+      try {
+        logToConsole('Connecting to ' + gateway);
+        console.log('Trying to open a WebSocket connection…');
+        websocket = new WebSocket(gateway);
+        websocket.onopen = onOpen;
+        websocket.onclose = onClose;
+        websocket.onmessage = onMessage;
+
+      } catch (error) {
+        console.error(error);
+        logToConsole('Websocket error' + error);
+      }
+    }
+
+    // When websocket is established, call the getReadings() function
+    function onOpen(event) {
+      logToConsole('Connection opened');
+      console.log('Connection opened');
+      getReadings();
+    }
+
+    function onClose(event) {
+      console.log('Connection closed');
+      setTimeout(initWebSocket, 2000);
+    }
+
+    // Function that receives the message from the ESP32 with the readings
+    function onMessage(event) {
+      console.log(event.data);
+      var myObj = JSON.parse(event.data);
+      var keys = Object.keys(myObj);
+
+      for (var i = 0; i < keys.length; i++) {
+        var key = keys[i];
+        document.getElementById(key).innerHTML = myObj[key];
+      }
+    }
+  </script>
+</body>
+
 </html>
