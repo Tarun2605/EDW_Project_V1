@@ -47,7 +47,39 @@ app.use('/config/bootUp', (req, res)=>{
         dateTime: new Date()
     }); 
 });
-
+app.use('/config/getAllData', (req, res)=>{
+    try {
+        const game= require('./models/gameModel');
+        game.find({}, (err, data)=>{
+            if(err){
+                res.status(500);
+                res.send({
+                    message: 'Error while fetching data',
+                    dateTime: new Date()
+                });
+                return ;
+            }
+            res.status(200);
+            res.send({
+                message: 'Data fetched successfully',
+                data: data,
+                dateTime: new Date()
+            });
+        });
+        res.send({
+            message: 'Data fetched successfully',
+            dateTime: new Date()
+        }); 
+        
+    } catch (error) {
+        res.status(500);
+        res.send({
+            message: 'Error while fetching data',
+            dateTime: new Date()
+        });
+    }
+});
 app.use('/game/tableTennis', require('./routes/tableTennis'));
 app.use('/game/badminton', require('./routes/badminton'));
 app.use('/game/hockey', require('./routes/hockey'));
+

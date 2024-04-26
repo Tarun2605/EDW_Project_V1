@@ -14,7 +14,22 @@ import SocketReciever from './utils/Socket';
 
 
 function App() {
-  
+  useEffect(() => {
+    const fetchAllData= async()=>{
+      try {
+        let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
+          setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
+        const response = await fetch('https://edw-tfub.onrender.com/config/getAllData');
+        const data = await response.json();
+        console.log('Data fetched successfully ', data);
+
+      } catch (error) {
+        console.log('Error occurred while fetching data ', error.message);
+      }
+    }
+    fetchAllData();
+  }
+  , []);
   return (
     <>
     <SocketReciever></SocketReciever>
