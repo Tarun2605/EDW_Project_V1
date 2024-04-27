@@ -16,14 +16,71 @@ import axios from 'axios';
 
 
 function App() {
-  let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
+  let {tableTennisTeamA, setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA, setBootUp,
     setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
 
         useEffect(() => {
           const fetchAllData = async () => {
             try {
               const response = await axios.get('https://edw-tfub.onrender.com/config/getAllData');
-              console.log('Data fetched successfully ', response.data);
+              console.log('Data fetched successfully ', response);
+              const gameData= await response?.data?.gameData;
+              // console.log('Game Data ', gameData);
+              gameData?.map((gameEach)=>{
+                // if (gameEach.game == 'tableTennis') {
+                  // setTableTennisTeamA(gameEach.gamedata.teamA);
+                  // setTableTennisTeamB(gameEach.gamedata.teamB);
+                // }
+                if(gameEach.game === 'tableTennis'){
+                  setTableTennisTeamA(gameEach.gamedata.teamA);
+                  setTableTennisTeamB(gameEach.gamedata.teamB);
+                  if ((teamWin == "A" || teamWin == "B")) {
+                      setTeamWin("None");
+                  }
+                  if (gameEach.gamedata.teamA.set >= 2 || gameEach.gamedata.teamB.set >= 2) {
+                    // console.log("Satisfied for table tennis");
+                      setTeamWin(gameEach.gamedata.teamA.set > gameEach.gamedata.teamB.set ? 'A' : 'B');
+                  }
+                }
+                if(gameEach.game === 'badminton'){
+                  // console.log("checkpoint 1");
+                  gameEach = gameEach.gamedata;
+                  setBadmintonTeamA(gameEach.teamA);
+                  setBadmintonTeamB(gameEach.teamB);
+                  if ((teamWin == "A" || teamWin == "B")) {
+                      setTeamWin("None");
+                  }
+                  if (gameEach.teamA.set >= 2 || gameEach.teamB.set >= 2) {
+                    // console.log("Satisfied for badminton");
+                      setTeamWin(gameEach.teamA.set > gameEach.teamB.set ? 'A' : 'B');
+                  }
+                }
+                if(gameEach.game === 'hockey'){
+                  gameEach = gameEach.gamedata;
+                  // console.log("Checkpoint 1");
+                  setHockeyTeamA(gameEach.teamA);
+                  setHockeyTeamB(gameEach.teamB);
+                  setHockeyQuarter(gameEach.quarter);
+                  // setHockeyTime(gameEach.time);
+                  // setHockeyStart(gameEach.start);
+                  if ((teamWin == "A" || teamWin == "B")) {
+                      setTeamWin("None");
+                  }
+                  if (gameEach.quarter == 4 && gameEach.time == 0) {
+                    // console.log("Satisfied for hockey");
+                    setTeamWin(gameEach.teamA.score > gameEach.teamB.score ? 'A' : 'B');
+                  }
+
+                }
+              }
+            );
+            const latestGame = gameData.reduce((prev, current) => {
+              
+              return prev.updatedAt > current.updatedAt ? prev : current;
+            });
+
+            setSelectedGame(latestGame.game);
+            console.log('Latest Game ', latestGame.game);
             } catch (error) {
               console.log('Error occurred while fetching data ', error.message);
             }

@@ -18,8 +18,14 @@
     margin: 1vw;
     width: 2vw;
     height: 2vw;
-    background: yellow;
-    border: 3px solid red;
+    /* background: red; */
+    border: 3px solid yellow;
+}
+.red {
+    background-color: red;
+}
+.green {
+    background-color: green;
 }
 @media screen and (max-width: 768px) {
     .arduino-cont {

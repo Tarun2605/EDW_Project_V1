@@ -8,13 +8,18 @@ export default function SocketReciever() {
     // const ENDPOINT = 'http://localhost:5000';
     var socket = io(ENDPOINT);
     let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
-        setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
+        setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart, setBootUp } = useContext(Appcontext);
     socket.on('connect', () => {
         console.log('Connected to server');
     });
     socket.on('disconnected', () => {
         console.log('Disconnected from server');
     });
+    socket.on('BootUp', (data) => {
+        console.log('BootUp data received', data);
+        setBootUp(true);
+    }
+    );
     socket.on('TennisScoreUpdate', (score) => {
         try {
             console.log(teamWin);
@@ -61,9 +66,9 @@ export default function SocketReciever() {
             // console.log(selectedGame);
             // setTableTennisTeamA(score.data.teamA);
             // setTableTennisTeamB(score.data.teamB);
-            if (!socket.disconnected) {
+            
                 socket.disconnect();
-            }
+            
         } catch (error) {
             console.log('Error occurred while updating score for Team A ', error.message);
 
@@ -89,9 +94,9 @@ export default function SocketReciever() {
             // console.log(selectedGame);
             // setTableTennisTeamA(score.data.teamA);
             // setTableTennisTeamB(score.data.teamB);
-            if (!socket.disconnected) {
+            
                 socket.disconnect();
-            }
+            
         } catch (error) {
             console.log('Error occurred while updating score for Team A ', error.message);
 
@@ -114,9 +119,9 @@ export default function SocketReciever() {
             // console.log(selectedGame);
             // setTableTennisTeamA(score.data.teamA);
             // setTableTennisTeamB(score.data.teamB);
-            if (!socket.disconnected) {
+            
                 socket.disconnect();
-            }
+            
         } catch (error) {
             console.log('Error occurred while updating score for Team A ', error.message);
 

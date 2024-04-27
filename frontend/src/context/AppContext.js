@@ -3,7 +3,8 @@ import { createContext, useState } from "react";
 export const Appcontext = createContext();
 
 export default function AppcontextProvider({children}){
-    const [selectedGame, setSelectedGame] = useState("hockey");
+    const [bootUp, setBootUp] = useState(false);
+    const [selectedGame, setSelectedGame] = useState("none");
     const [teamWin, setTeamWin] = useState("none");
     const [TableTennisTeamA, setTableTennisTeamA] = useState({score:0, set:0});
     const [TableTennisTeamB, setTableTennisTeamB] = useState({score:0, set:0});
@@ -20,6 +21,8 @@ export default function AppcontextProvider({children}){
         setTeamWin();
     }
     const value = {
+        bootUp,
+        setBootUp,
         selectedGame,
         setSelectedGame,
         teamWin, // Add this

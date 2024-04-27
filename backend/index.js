@@ -46,7 +46,7 @@ app.get('/', (req, res)=>{
 }); 
 
 app.use('/config/bootUp', (req, res)=>{ 
-    io.emit('message',{data: 'Arduino is up and running'});
+    io.emit("BootUp",{data: 'Arduino is up and running'});
     res.status(200); 
     res.send({
         message: 'Arduino is up and running',
@@ -55,7 +55,7 @@ app.use('/config/bootUp', (req, res)=>{
 });
 app.get('/config/getAllData', async (req, res)=>{
     try {
-        console.log("object");
+        console.log("getting all data");
         const game= require('./models/gameModel');
         const gameData = await game.find();
         console.log(gameData);
