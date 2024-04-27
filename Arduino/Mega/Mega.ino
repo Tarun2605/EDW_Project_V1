@@ -28,8 +28,8 @@ char keys[ROWS][COLS] = {
   {'7','8','9','C'},
   {'*','0','#','D'}
 };
-byte rowPins[ROWS] = {46, 47, 48, 49}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
-byte colPins[COLS] = {50, 51, 52, 53}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins
+byte rowPins[ROWS] = {23, 25, 27, 29}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
+byte colPins[COLS] = {31, 33, 35, 37}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins
 
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);

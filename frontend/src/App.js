@@ -11,26 +11,26 @@ import Arduino from './components/Arduino';
 import Info from './pages/Info';
 import { Appcontext } from './context/AppContext';
 import SocketReciever from './utils/Socket';
+import axios from 'axios';
 // Rest of the code...
 
 
 function App() {
   let { setTableTennisTeamA, setTableTennisTeamB, teamWin, selectedGame, setSelectedGame, setTeamWin, BadmintonTeamA, setBadmintonTeamA, BadmintonTeamB, setBadmintonTeamB, HockeyTeamA,
     setHockeyTeamA, HockeyTeamB, setHockeyTeamB, HockeyQuarter, setHockeyQuarter,      HockeyTime, setHockeyTime, HockeyStart, setHockeyStart } = useContext(Appcontext);
-  useEffect(() => {
-    const fetchAllData= async()=>{
-      try {
-        const response = await fetch('https://edw-tfub.onrender.com/config/getAllData');
-        const data = await response.json();
-        console.log('Data fetched successfully ', data);
 
-      } catch (error) {
-        console.log('Error occurred while fetching data ', error.message);
-      }
-    }
-    fetchAllData();
-  }
-  , []);
+        useEffect(() => {
+          const fetchAllData = async () => {
+            try {
+              const response = await axios.get('https://edw-tfub.onrender.com/config/getAllData');
+              console.log('Data fetched successfully ', response.data);
+            } catch (error) {
+              console.log('Error occurred while fetching data ', error.message);
+            }
+          }
+          fetchAllData();
+        }, []);
+        
   return (
     <>
     <SocketReciever></SocketReciever>

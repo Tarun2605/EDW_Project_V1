@@ -366,7 +366,7 @@ void handleConnect() {
   Serial.print("IP Address: ");
   if (callAPI(apiUrl)) {
     setColor(0,0,0);
-    delay(500);
+    // delay(500);
     setColor(0, 255, 0); // Green Color
   }
  IPAddress ip = WiFi.localIP();
@@ -380,7 +380,7 @@ void handleConnect() {
 }
 
 void setup() {
-  Serial.begin(115200);
+  Serial.begin(9600);
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
@@ -408,18 +408,11 @@ const unsigned long apiCallInterval = 10000; // 10 seconds interval
 void loop() {
   server.handleClient();
 
-  unsigned long currentMillis = millis();
+  
 
-  // Check if it's time to make the API call
-  if (currentMillis - lastAPICallTime >= apiCallInterval) {
-    lastAPICallTime = currentMillis; // Update the last call time
-    // Make the API call here
-    // For example:
-    // callAPI(apiUrl);
-  }
-
-  if (Serial.available() > 0) {
+  
     String receivedData = Serial.readStringUntil('\r'); // Read the data until newline character
+    // Serial.println(receivedData);
     if (receivedData.equals("TableTennisTeamAInc")) {
       Serial.println("TableTennisTeamAInc");
       setColor(255,0,100);
@@ -439,7 +432,7 @@ void loop() {
       Serial.println("TableTennisTeamBInc");
       callAPI("https://edw-tfub.onrender.com/game/badminton/teamB/inc");
     }
-  }
+  
 }
 
 

@@ -6,7 +6,7 @@ const socketIo = require('socket.io');
 app.use(express.json());
 var cors = require('cors');
 var corsOptions = {
-    origin: 'https://edw-project-v1-1.onrender.com',
+    origin: ['https://edw-project-v1-1.onrender.com', 'http://localhost:3000'],
     optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
 }
 app.use(cors(corsOptions));
@@ -53,31 +53,21 @@ app.use('/config/bootUp', (req, res)=>{
         dateTime: new Date()
     }); 
 });
-app.use('/config/getAllData', (req, res)=>{
+app.get('/config/getAllData', async (req, res)=>{
     try {
+        console.log("object");
         const game= require('./models/gameModel');
-        game.find({}, (err, data)=>{
-            if(err){
-                res.status(500);
-                res.send({
-                    message: 'Error while fetching data',
-                    dateTime: new Date()
-                });
-                return ;
-            }
-            res.status(200);
-            res.send({
-                message: 'Data fetched successfully',
-                data: data,
-                dateTime: new Date()
-            });
-        });
+        const gameData = await game.find();
+        console.log(gameData);
+        res.status(200);
         res.send({
             message: 'Data fetched successfully',
+            gameData: gameData,
             dateTime: new Date()
-        }); 
+        });
         
     } catch (error) {
+        console.log('Error occurred while fetching data ', error.message);
         res.status(500);
         res.send({
             message: 'Error while fetching data',
