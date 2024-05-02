@@ -2,6 +2,7 @@
 #include <MCUFRIEND_kbv.h>
 #include <Keypad.h>
 #include <SoftwareSerial.h>
+#include <ArduinoJson.h>
 
 
 
@@ -10,13 +11,15 @@
 #define LCD_WR A1
 #define LCD_RD A0
 #define LCD_RESET A4
-#define ESP_SERIAL_TX 16 // Define the transmit pin (TX) for ESP8266
-#define ESP_SERIAL_RX 17 // Define the receive pin (RX) for ESP8266
+#define ESP_SERIAL_TX 18 // Define the transmit pin (TX) for ESP8266
+#define ESP_SERIAL_RX 19 // Define the receive pin (RX) for ESP8266
 int redPin= 24;
 int greenPin = 25;
 int  bluePin = 26;
 
 SoftwareSerial espSerial(ESP_SERIAL_RX, ESP_SERIAL_TX); // Create a SoftwareSerial object for ESP8266
+SoftwareSerial nodemcu(24, 22);
+
 MCUFRIEND_kbv tft;
 
 
@@ -33,6 +36,7 @@ byte colPins[COLS] = {31, 33, 35, 37}; // Columns 1 to 4 connected to C1, C2, C3
 
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
+
 
 
 int selectedGame = 0;
@@ -129,11 +133,72 @@ String games[NUM_GAMES] = { "Table Tennis", "Badminton", "Hockey", "ADD GAME" };
 const uint16_t gameColors[NUM_GAMES] = { 0x7E0, 0xFF00, 0xF800, 0x001F };
 
 
+void setData(String data) {
+  if (data.startsWith("SetData")) {
+    data = data.substring(7);
+  }
+  Serial.println(data);
+  // Create a StaticJsonDocument with a capacity of 4096 bytes
+  StaticJsonDocument<4096> doc;
 
+  // Deserialize the JSON document
+  DeserializationError error = deserializeJson(doc, data);
+
+  // Test if parsing succeeds.
+  if (error) {
+    Serial.print(F("deserializeJson() failed: "));
+    Serial.println(error.f_str());
+    return;
+  }
+
+  // Get the values from the JSON document
+  const char* message = doc["message"]; // "Data fetched successfully"
+  JsonArray gameData = doc["gameData"];
+
+  for(JsonVariant v : gameData) {
+    const char* _id = v["_id"]; // "662370b448ed5025aa3fd82c"
+    const char* game = v["game"]; // "tableTennis"
+    JsonObject gamedata = v["gamedata"];
+    JsonObject teamA = gamedata["teamA"];
+    int scoreA = teamA["score"]; // 4
+    Serial.println(scoreA);
+    int setA = teamA["set"]; // 1
+    JsonObject teamB = gamedata["teamB"];
+    int scoreB = teamB["score"]; // 2
+    int setB = teamB["set"]; // 0
+    const char* updatedAt = v["updatedAt"]; // "2024-04-20T07:37:24.482Z"
+    int __v = v["__v"]; // 0
+
+    // Update the global variables based on the game
+    if (strcmp(game, "tableTennis") == 0) {
+      tabletennisTeamA = scoreA;
+      tabletennisTeamB = scoreB;
+      setScoreA = setA;
+      setScoreB = setB;
+      Serial.println("Table tennis is set");
+    } else if (strcmp(game, "hockey") == 0) {
+      HockeyTeamA = scoreA;
+      HockeyTeamB = scoreB;
+      quarter=gamedata["quarter"];
+      Serial.println("Hockey is set");
+    } else if (strcmp(game, "badminton") == 0) {
+      BadmintonTeamA = scoreA;
+      BadmintonTeamB = scoreB;
+      BadmintonsetScoreA = setA;
+      BadmintonsetScoreB = setB;
+      Serial.println("Badminton is set");
+    }
+  }
+
+  // const char* dateTime = doc["dateTime"]; // "2024-04-27T19:00:26.237Z"
+  // Serial.println(dateTime);
+}
 
 void setup() {
   Serial.begin(9600); // Start serial communication with Arduino Serial Monitor
   espSerial.begin(9600); // Start serial communication with ESP8266
+  // nodemcu.begin(9600);
+  Serial1.begin(9600);
   Serial.print("started");
 
   tft.begin();
@@ -158,6 +223,14 @@ void setColor(int redValue, int greenValue,  int blueValue) {
 
 
 void loop() {
+  // String receivedData = nodemcu.readStringUntil('\r');
+  // Serial.println(receivedData);
+  if (Serial1.available()){
+    String data = Serial1.readString(); // read it and store it in 'data'
+    if (data.startsWith("{")) {
+        setData(data);
+    }
+  }
   char key = keypad.getKey();
 
 
@@ -180,6 +253,7 @@ void loop() {
       case 'A':
         // Handle navigation key 'A' press (up)
         selectedGame--;
+        
         if (selectedGame < 0) {
           selectedGame = NUM_GAMES - 1;
         }
@@ -384,7 +458,8 @@ void loop() {
     if (key == 'A') {
       delay(50);  // Debounce delay
         tabletennisTeamA++;
-        espSerial.println("TableTennisTeamAInc");
+        Serial1.println("TableTennisTeamAInc");
+        // espSerial.println("TableTennisTeamAInc");
         updateTennisScore();
     }
 
@@ -393,7 +468,8 @@ void loop() {
     if (key == 'B') {
       delay(50);  // Debounce delay
         tabletennisTeamB++;
-        espSerial.println("TableTennisTeamBInc");
+        Serial1.println("TableTennisTeamBInc");
+        // espSerial.println("TableTennisTeamBInc");
         updateTennisScore();
     }
 
@@ -412,7 +488,8 @@ void loop() {
     if (key == 'A') {
       delay(50);  // Debounce delay
         BadmintonTeamA++;
-                espSerial.println("BadmintonTeamAInc");
+        Serial1.println("BadmintonTeamAInc");
+                // espSerial.println("BadmintonTeamAInc");
         lastpoint=true;
         updateBadmintonScore();
     }
@@ -422,7 +499,8 @@ void loop() {
     if (key == 'B') {
       delay(50);  // Debounce delay
         BadmintonTeamB++;
-                espSerial.println("BadmintonTeamBInc");
+        Serial1.println("BadmintonTeamBInc");
+                // espSerial.println("BadmintonTeamBInc");
         lastpoint= false;
         updateBadmintonScore();
     }
@@ -440,6 +518,8 @@ void loop() {
     if (key == 'A') {
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
+        Serial1.println("HockeyTeamAInc");
+        // espSerial.println("HockeyTeamAInc");
         HockeyTeamA++;
         updateHockeyScore();
       }
@@ -450,6 +530,8 @@ void loop() {
     if (key=='B') {
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
+        // espSerial.println("HockeyTeamBInc");
+        Serial1.println("HockeyTeamBInc");
         HockeyTeamB++;
         updateHockeyScore();
       }
@@ -867,6 +949,7 @@ void updateTennisScore() {
       && tabletennisTeamA
              - tabletennisTeamB
            >= 2) {
+    
     setScoreA++;
     resetTennisScore();
   } else if (tabletennisTeamB >= 11 && tabletennisTeamB - tabletennisTeamA >= 2) {

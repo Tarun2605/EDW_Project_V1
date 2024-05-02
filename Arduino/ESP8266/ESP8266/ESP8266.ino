@@ -22,44 +22,6 @@ void setColor(int redValue, int greenValue,  int blueValue) {
   analogWrite(greenPin,  greenValue);
   analogWrite(bluePin, blueValue);
 }
-bool callAPI(String url) {
-  Serial.println(url);
-  std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
-
-  // Ignore SSL certificate validation
-  client->setInsecure();
-
-  // Create an HTTPClient instance
-  HTTPClient https;
-
-  // Initializing an HTTPS communication using the secure client
-  Serial.print("[HTTPS] begin...\n");
-  if (https.begin(*client, url)) {  // HTTPS
-    Serial.print("[HTTPS] GET...\n");
-    // Start connection and send HTTP header
-    int httpCode = https.GET();
-    // httpCode will be negative on error
-    if (httpCode > 0) {
-      // HTTP header has been sent and Server response header has been handled
-      Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
-      // File found at server
-      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
-        String payload = https.getString();
-        Serial.println(payload);
-        https.end();
-        return true; // API call successful
-      }
-    } else {
-      Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
-    }
-
-    https.end();
-  } else {
-    Serial.printf("[HTTPS] Unable to connect\n");
-  }
-
-  return false; // API call failed
-}
 
 void handleRoot() {
   String content = "<!DOCTYPE html>\n"
@@ -362,9 +324,44 @@ void handleConnect() {
     Serial.println("Connecting to WiFi...");
   }
 
-  Serial.println("Connected to WiFi");
-  Serial.print("IP Address: ");
-  if (callAPI(apiUrl)) {
+  // Serial.println("Connected to WiFi");
+  // Serial.print("IP Address: ");
+  if (callAPI("https://edw-tfub.onrender.com/config/bootUp")) {
+    // Serial.println(url);
+    String url="https://edw-tfub.onrender.com/config/getAllData";
+    std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
+
+    // Ignore SSL certificate validation
+    client->setInsecure();
+
+    // Create an HTTPClient instance
+    HTTPClient https;
+
+    // Initializing an HTTPS communication using the secure client
+    // Serial.print("[HTTPS] begin...\n");
+    if (https.begin(*client, url)) {  // HTTPS
+      // Serial.print("[HTTPS] GET...\n");
+      // Start connection and send HTTP header
+      int httpCode = https.GET();
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        // HTTP header has been sent and Server response header has been handled
+        // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+        // File found at server
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+          String payload = https.getString();
+          Serial.println(payload);
+          https.end();
+          // return true; // API call successful
+        }
+      } else {
+        Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+      }
+
+      https.end();
+  } else {
+    Serial.printf("[HTTPS] Unable to connect\n");
+  }
     setColor(0,0,0);
     // delay(500);
     setColor(0, 255, 0); // Green Color
@@ -372,15 +369,54 @@ void handleConnect() {
  IPAddress ip = WiFi.localIP();
   String ipAddress = String(ip[0]) + "." + String(ip[1]) + "." + String(ip[2]) + "." + String(ip[3]);
   ipp = (char*) ipAddress.c_str();
-  Serial.println(ipAddress);
+  // Serial.println(ipAddress);
 
   // Redirect to a different page after connecting
   server.sendHeader("Location", "/", true);
   server.send(302, "text/plain", "");
 }
+SoftwareSerial nodemcu(D3, D4);
+bool callAPI(String url) {
+  // Serial.println(url);
+  std::unique_ptr<BearSSL::WiFiClientSecure> client(new BearSSL::WiFiClientSecure);
 
+  // Ignore SSL certificate validation
+  client->setInsecure();
+
+  // Create an HTTPClient instance
+  HTTPClient https;
+
+  // Initializing an HTTPS communication using the secure client
+  // Serial.print("[HTTPS] begin...\n");
+  if (https.begin(*client, url)) {  // HTTPS
+    // Serial.print("[HTTPS] GET...\n");
+    // Start connection and send HTTP header
+    int httpCode = https.GET();
+    // httpCode will be negative on error
+    if (httpCode > 0) {
+      // HTTP header has been sent and Server response header has been handled
+      // Serial.printf("[HTTPS] GET... code: %d\n", httpCode);
+      // File found at server
+      if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+        String payload = https.getString();
+        Serial.println(payload);
+        https.end();
+        return true; // API call successful
+      }
+    } else {
+      Serial.printf("[HTTPS] GET... failed, error: %s\n", https.errorToString(httpCode).c_str());
+    }
+
+    https.end();
+  } else {
+    Serial.printf("[HTTPS] Unable to connect\n");
+  }
+
+  return false; // API call failed
+}
 void setup() {
   Serial.begin(9600);
+  nodemcu.begin(9600);
   pinMode(redPin, OUTPUT);
   pinMode(greenPin, OUTPUT);
   pinMode(bluePin, OUTPUT);
@@ -406,6 +442,7 @@ unsigned long lastAPICallTime = 0;
 const unsigned long apiCallInterval = 10000; // 10 seconds interval
 
 void loop() {
+  // nodemcu.println("hiiiiiiiiiiiiii");
   server.handleClient();
 
   
@@ -414,25 +451,68 @@ void loop() {
     String receivedData = Serial.readStringUntil('\r'); // Read the data until newline character
     // Serial.println(receivedData);
     if (receivedData.equals("TableTennisTeamAInc")) {
-      Serial.println("TableTennisTeamAInc");
+      Serial.println("TableTennisTeamAIncFromNode");
       setColor(255,0,100);
+      delay(500);
       if(callAPI("https://edw-tfub.onrender.com/game/tableTennis/teamA/inc")){
         setColor(0,255,0);
       }
     }
     if (receivedData.equals("TableTennisTeamBInc")) {
-      Serial.println("TableTennisTeamBInc");
-      callAPI("https://edw-tfub.onrender.com/game/tableTennis/teamB/inc");
+      Serial.println("TableTennisTeamBIncFromNode");
+      setColor(255,0,100);
+      delay(500);
+      if(callAPI("https://edw-tfub.onrender.com/game/tableTennis/teamB/inc")){
+        setColor(0,255,0);
+      }
     }
     if (receivedData.equals("BadmintonTeamAInc")) {
-      Serial.println("TableTennisTeamBInc");
-      callAPI("https://edw-tfub.onrender.com/game/badminton/teamA/inc");
+      Serial.println("TableTennisTeamBIncFromNode");
+      setColor(255,0,100);
+      delay(500);
+      if(callAPI("https://edw-tfub.onrender.com/game/badminton/teamA/inc")){
+        setColor(0,255,0);
+      }
     }
     if (receivedData.equals("BadmintonTeamBInc")) {
       Serial.println("TableTennisTeamBInc");
       callAPI("https://edw-tfub.onrender.com/game/badminton/teamB/inc");
     }
-  
+    if (receivedData.equals("HockeyChangeQuarter")) {
+      // Serial.println("TableTennisTeamAInc");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/changeQuarter")){
+        setColor(0,255,0);
+      }
+    }
+    if (receivedData.equals("HockeyTeamAInc")) {
+      // Serial.println("TableTennisTeamAInc");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/teamA/inc")){
+        setColor(0,255,0);
+      }
+    }
+    if (receivedData.equals("HockeyTeamBInc")) {
+      // Serial.println("TableTennisTeamAInc");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/teamB/inc")){
+        setColor(0,255,0);
+      }
+    }
+    if (receivedData.equals("HockeyTimePause")) {
+      // Serial.println("TableTennisTeamAInc");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/time/pause")){
+        setColor(0,255,0);
+      }
+    }
+    if (receivedData.equals("HockeyTimeResume")) {
+      // Serial.println("TableTennisTeamAInc");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/time/resume")){
+        setColor(0,255,0);
+      }
+    }
 }
 
 

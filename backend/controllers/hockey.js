@@ -64,8 +64,8 @@ const changeQuarter = async (req, res) => {
                 { game: 'hockey' },
                 {
                     $set: {
-                        'gamedata.teamA.score': gameDataExist.gamedata.quarter + 1 > 4 ? 0 : (gameDataExist.gamedata.teamA.score || 0)   + 1,
-                        'gamedata.teamB.score': gameDataExist.gamedata.quarter + 1 > 4 ? 0 : (gameDataExist.gamedata.teamB.score || 0) + 1,
+                        'gamedata.teamA.score': gameDataExist.gamedata.quarter + 1 > 4 ? 0 : (gameDataExist.gamedata.teamA.score || 0) ,
+                        'gamedata.teamB.score': gameDataExist.gamedata.quarter + 1 > 4 ? 0 : (gameDataExist.gamedata.teamB.score || 0) ,
                         'gamedata.startedAt': new Date().toISOString(),
                         'gamedata.quarter': gameDataExist.gamedata.quarter + 1 > 4 ? 1 : gameDataExist.gamedata.quarter + 1,
                         'updatedAt': new Date().toISOString(),
