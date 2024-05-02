@@ -1,9 +1,7 @@
 #include <Adafruit_GFX.h>
 #include <MCUFRIEND_kbv.h>
 #include <Keypad.h>
-#include <SoftwareSerial.h>
 #include <ArduinoJson.h>
-
 
 
 #define LCD_CS A3
@@ -11,14 +9,7 @@
 #define LCD_WR A1
 #define LCD_RD A0
 #define LCD_RESET A4
-#define ESP_SERIAL_TX 18 // Define the transmit pin (TX) for ESP8266
-#define ESP_SERIAL_RX 19 // Define the receive pin (RX) for ESP8266
-int redPin= 24;
-int greenPin = 25;
-int  bluePin = 26;
 
-SoftwareSerial espSerial(ESP_SERIAL_RX, ESP_SERIAL_TX); // Create a SoftwareSerial object for ESP8266
-SoftwareSerial nodemcu(24, 22);
 
 MCUFRIEND_kbv tft;
 
@@ -32,11 +23,14 @@ char keys[ROWS][COLS] = {
   {'*','0','#','D'}
 };
 byte rowPins[ROWS] = {23, 25, 27, 29}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
-byte colPins[COLS] = {31, 33, 35, 37}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins
+byte colPins[COLS] = {31,33,35,37}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins
+
+
+/* byte rowPins[ROWS] = {22,24,26,28}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
+byte colPins[COLS] = {30,32,34,36}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins */
 
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
-
 
 
 int selectedGame = 0;
@@ -75,7 +69,18 @@ bool lastpoint = true;  //true means player 1
 bool player1Serving = true;  //Player 1 is serving
 
 
-/*ADD GAME Variables*/
+                  /*
+
+
+
+
+
+
+                  ADD GAME Variables
+       
+       
+       
+                  */
 enum GameType {
   TIMED,
   NON_TIMED,
@@ -94,8 +99,6 @@ int inputSeconds = 0;
 
 
 int inputNumIntervals=0;
-int intervalTime=0;
-int intervalTimeCopy=0;
 int intervalno=1;
 
 
@@ -122,6 +125,9 @@ int choice=0;
 bool gameAdded=false;
 
 
+/////////////////////////////////////////////////////////////
+
+
 
 
 const int NUM_GAMES = 4;
@@ -141,8 +147,10 @@ void setData(String data) {
   // Create a StaticJsonDocument with a capacity of 4096 bytes
   StaticJsonDocument<4096> doc;
 
+
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, data);
+
 
   // Test if parsing succeeds.
   if (error) {
@@ -151,9 +159,11 @@ void setData(String data) {
     return;
   }
 
+
   // Get the values from the JSON document
   const char* message = doc["message"]; // "Data fetched successfully"
   JsonArray gameData = doc["gameData"];
+
 
   for(JsonVariant v : gameData) {
     const char* _id = v["_id"]; // "662370b448ed5025aa3fd82c"
@@ -167,7 +177,8 @@ void setData(String data) {
     int scoreB = teamB["score"]; // 2
     int setB = teamB["set"]; // 0
     const char* updatedAt = v["updatedAt"]; // "2024-04-20T07:37:24.482Z"
-    int __v = v["__v"]; // 0
+    int _v = v["_v"]; // 0
+
 
     // Update the global variables based on the game
     if (strcmp(game, "tableTennis") == 0) {
@@ -190,83 +201,57 @@ void setData(String data) {
     }
   }
 
+
   // const char* dateTime = doc["dateTime"]; // "2024-04-27T19:00:26.237Z"
   // Serial.println(dateTime);
 }
 
+
+
+
 void setup() {
-  Serial.begin(9600); // Start serial communication with Arduino Serial Monitor
-  espSerial.begin(9600); // Start serial communication with ESP8266
-  // nodemcu.begin(9600);
+  Serial.begin(9600);
   Serial1.begin(9600);
-  Serial.print("started");
+
 
   tft.begin();
   tft.setRotation(1);
   tft.fillScreen(0x0000);
   tft.setTextSize(2);
-  pinMode(redPin,  OUTPUT);              
-  pinMode(greenPin, OUTPUT);
-  pinMode(bluePin, OUTPUT);
 
 
   if (!inGameScreen) {
     displayMenu();
   }
-
-}
-void setColor(int redValue, int greenValue,  int blueValue) {
-  analogWrite(redPin, redValue);
-  analogWrite(greenPin,  greenValue);
-  analogWrite(bluePin, blueValue);
 }
 
 
 void loop() {
-  // String receivedData = nodemcu.readStringUntil('\r');
-  // Serial.println(receivedData);
-  if (Serial1.available()){
+if (Serial1.available()){
     String data = Serial1.readString(); // read it and store it in 'data'
     if (data.startsWith("{")) {
         setData(data);
     }
   }
+
+
   char key = keypad.getKey();
 
 
   if (key != NO_KEY) {
     switch (key) {
-      case '1':
-        // Handle key '1' press
-        break;
-      case '2':
-        // Handle key '2' press
-        break;
-      case '3':
-        // Handle key '3' press
-        break;
-      case '4':
-        // Handle key '4' press
-        break;
 
 
       case 'A':
         // Handle navigation key 'A' press (up)
-        selectedGame--;
-        
-        if (selectedGame < 0) {
-          selectedGame = NUM_GAMES - 1;
+        if(!inGameScreen) {
+          selectedGame--;
+          if (selectedGame < 0) {
+            selectedGame = NUM_GAMES - 1;
+          }
         }
         if (inGameScreen) {
-          if (tableTennisActive) {
-            displayTennisScoreScreen();
-          } else if (BadmintonActive) {
-            displayBadmintonScoreScreen();
-          } else if (HockeyActive) {
-            displayHockeyScoreScreen();
-          } else {
-            displayGameScreen(selectedGame);
-          }
+     //////////////
         } else {
           displayMenu();
         }
@@ -275,20 +260,15 @@ void loop() {
 
       case 'B':
         // Handle navigation key 'B' press (down)
-        selectedGame++;
-        if (selectedGame >= NUM_GAMES) {
-          selectedGame = 0;
-        }
-        if (inGameScreen) {
-          if (tableTennisActive) {
-            displayTennisScoreScreen();
-          } else if (BadmintonActive) {
-            displayBadmintonScoreScreen();
-          } else if (HockeyActive) {
-            displayHockeyScoreScreen();
-          } else {
-            displayGameScreen(selectedGame);
+        if(!inGameScreen) {
+          selectedGame++;
+          if (selectedGame >= NUM_GAMES) {
+            selectedGame = 0;
           }
+        }
+       
+        if (inGameScreen) {
+         /////////////////
         } else {
           displayMenu();
         }
@@ -312,7 +292,7 @@ void loop() {
             break;
           case 3:
             if(!gameAdded){
-            displayAddGameMenu();
+              displayAddGameMenu();
             }
             else{
               if(selectedGameType == TIMED){
@@ -360,8 +340,14 @@ void loop() {
             HockeyActive = true;
             break;
           case 3:
-              // ADD GAME selected
-              // Do something for ADD GAME
+          if(gameAdded){
+              if(selectedGameType == TIMED){
+                displayCustomScoreScreen_Timed();
+              }
+              else if(selectedGameType == NON_TIMED){
+                displayCustomScoreScreen_NonTimed();
+              }
+          }
               break;
           default:
               break;
@@ -379,6 +365,7 @@ void loop() {
     if (key=='#') {
          isPaused = !isPaused;
         Serial.println("Button pressed");
+        Serial1.println("HockeyChangeQuarter");
       delay(50); // Debounce delay
       }
    
@@ -392,7 +379,12 @@ void loop() {
       if (seconds == 0) {
         if (minutes == 0) {
           // Timer reached 0
+         
           quarter++;
+          Serial.println("arduino is channging quarter");
+          // Serial1.println("HockeyChangeQuarter");
+
+
           resetTimer();
           //displayHockeyScoreScreen();
           if(quarter>4){
@@ -414,7 +406,7 @@ void loop() {
   }
 
 
-  if(AddGameActive){
+  if(AddGameActive && selectedGameType == TIMED){
     unsigned long currentMillis = millis();
     if (key=='#') {
         customisPaused = !customisPaused;
@@ -430,11 +422,10 @@ void loop() {
 
 
       if (inputSeconds == 0) {
-        if (intervalTime == 0) {
+        if (inputMinutes == 0) {
           // Timer reached 0
           intervalno++;
           resetCustomTimer();
-          //displayHockeyScoreScreen();
           if(intervalno>inputNumIntervals){
             intervalno=1;
           }
@@ -459,7 +450,6 @@ void loop() {
       delay(50);  // Debounce delay
         tabletennisTeamA++;
         Serial1.println("TableTennisTeamAInc");
-        // espSerial.println("TableTennisTeamAInc");
         updateTennisScore();
     }
 
@@ -468,17 +458,8 @@ void loop() {
     if (key == 'B') {
       delay(50);  // Debounce delay
         tabletennisTeamB++;
-        Serial1.println("TableTennisTeamBInc");
-        // espSerial.println("TableTennisTeamBInc");
+         Serial1.println("TableTennisTeamBInc");
         updateTennisScore();
-    }
-
-
-    // Go back to menu screen
-    if (key == 'D') {
-      tft.setTextSize(2);
-      tableTennisActive = false;
-      displayMenu();
     }
   }
 
@@ -489,7 +470,6 @@ void loop() {
       delay(50);  // Debounce delay
         BadmintonTeamA++;
         Serial1.println("BadmintonTeamAInc");
-                // espSerial.println("BadmintonTeamAInc");
         lastpoint=true;
         updateBadmintonScore();
     }
@@ -500,17 +480,8 @@ void loop() {
       delay(50);  // Debounce delay
         BadmintonTeamB++;
         Serial1.println("BadmintonTeamBInc");
-                // espSerial.println("BadmintonTeamBInc");
         lastpoint= false;
         updateBadmintonScore();
-    }
-
-
-    // Go back to menu screen
-    if (key == 'D') {
-      tft.setTextSize(2);
-      tableTennisActive = false;
-      displayMenu();
     }
   }
   else if (HockeyActive) {
@@ -519,7 +490,6 @@ void loop() {
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
         Serial1.println("HockeyTeamAInc");
-        // espSerial.println("HockeyTeamAInc");
         HockeyTeamA++;
         updateHockeyScore();
       }
@@ -530,7 +500,6 @@ void loop() {
     if (key=='B') {
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
-        // espSerial.println("HockeyTeamBInc");
         Serial1.println("HockeyTeamBInc");
         HockeyTeamB++;
         updateHockeyScore();
@@ -541,12 +510,6 @@ void loop() {
     }
 
 
-    // Go back to menu screen
-    if (key=='D') {
-      tft.setTextSize(2);
-      HockeyActive = false;
-      displayMenu();
-    }
   }
   else if(AddGameActive){
     if(!gameAdded){
@@ -561,7 +524,7 @@ void loop() {
       if(selectedGameType == TIMED){
         if (key == 'A') {
           delay(50);  // Debounce delay
-          if (intervalTime + inputSeconds>0 && ! customisPaused) {
+          if (inputMinutes + inputSeconds>0 && ! customisPaused) {
             customTeamA++;
             updateCustomScore_Timed();
           }
@@ -571,22 +534,16 @@ void loop() {
         // Increment score for Team B in Tennis
         if (key=='B') {
           delay(50);  // Debounce delay
-          if (intervalTime + inputSeconds>0 && ! customisPaused) {
+          if (inputMinutes + inputSeconds>0 && ! customisPaused) {
             customTeamB++;
             updateCustomScore_Timed();
           }
         }
-        if(intervalTime + inputSeconds == 0){
+        if(inputMinutes + inputSeconds == 0){
           updateCustomScore_Timed();
         }
 
 
-        // Go back to menu screen
-        if (key=='D') {
-          tft.setTextSize(2);
-          AddGameActive = false;
-          displayMenu();
-        }
       }
       else if(selectedGameType == NON_TIMED){
         if (key == 'A') {
@@ -604,12 +561,6 @@ void loop() {
         }
 
 
-        // Go back to menu screen
-        if (key == 'D') {
-          tft.setTextSize(2);
-          AddGameActive = false;
-          displayMenu();
-        }
       }
     }
   }  
@@ -648,36 +599,31 @@ void displayMenu() {
 
 
 void displayAddGameMenu() {
-  tft.fillScreen(0x0000); // Clear the screen
-
-
-  tft.setTextColor(0xFFFF); // White text color
   tft.setTextSize(2);
+  tft.fillScreen(0x0000);
+
+
+  int menuWidth = 280;
+  int menuHeight = 200;
+  int menuX = (tft.width() - menuWidth) / 2;
+  int menuY = (tft.height() - menuHeight) / 2 ;
+
+
+  int borderColor = 0xFFFF;
+  tft.drawRect(menuX, menuY, menuWidth, menuHeight, borderColor);
+  tft.setTextColor(0xFFFF);
 
 
   // Prompt for game type selection
-  tft.setCursor(10, 20);
+  tft.setCursor(menuX+10,menuY+20);
   tft.println("Select game type:");
-  tft.setCursor(10, 40);
+  tft.setCursor(menuX+10,menuY+40);
   tft.println("1. Timed");
-  tft.setCursor(10, 60);
+  tft.setCursor(menuX+10,menuY+60);
   tft.println("2. Non-timed");
 }
 
 
-// Function to display the game screen
-void displayGameScreen(int gameIndex) {
-  tft.fillScreen(0x0000);
-
-
-  tft.setTextColor(gameColors[gameIndex]);
-  tft.setTextSize(3);
-  tft.setCursor(40, 100);
-  tft.println(games[gameIndex]);
-
-
-  inGameScreen = true;
-}
 
 
 void displayTimedGameConfigMenu() {
@@ -712,11 +658,9 @@ void displayTimedGameConfigMenu() {
 
 
   if(choice==1){
-    displayMenu();
-    intervalTime = inputMinutes/inputNumIntervals;
-    intervalTimeCopy=intervalTime;
     gameAdded=true;
     games[3]="Custom Game";
+    displayMenu();
   }
   else if(choice == 2){
     tft.fillScreen(0x0000);
@@ -949,7 +893,6 @@ void updateTennisScore() {
       && tabletennisTeamA
              - tabletennisTeamB
            >= 2) {
-    
     setScoreA++;
     resetTennisScore();
   } else if (tabletennisTeamB >= 11 && tabletennisTeamB - tabletennisTeamA >= 2) {
@@ -1001,7 +944,7 @@ void updateTennisScore() {
    resetfinalTTScore();
     // displayMenu();
   } else {
-    displayTennisScoreScreen();
+      displayTennisScoreScreen();
   }
 }
 
@@ -1111,7 +1054,7 @@ void updateBadmintonScore() {
     resetfinalBadmintonScore();
     // displayMenu();
   } else {
-    displayBadmintonScoreScreen();
+      displayBadmintonScoreScreen();
   }
 }
 
@@ -1237,7 +1180,7 @@ void updateHockeyScore() {
     }
   }
   else{
-  displayHockeyScoreScreen();
+    displayHockeyScoreScreen();
   }
  
 }
@@ -1296,7 +1239,7 @@ void resetfinalCustomScore_Timed() {
 
 
 void resetCustomTimer(){
-  intervalTime=intervalTimeCopy;
+  inputMinutes=inputMinutesCopy;
   inputSeconds = 0;
   customisPaused= true;
 }
@@ -1326,7 +1269,7 @@ void resetfinalCustomScore_NonTimed() {
 void displayTimer() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
-   tft.fillRect(115,10, 200, 50, 0xFF00); //yellow
+   tft.fillRect(115,10,200,115, 0xFF00); //yellow
     tft.setCursor(120, 15);
     tft.setTextColor(0x0000);
     if(minutes<10){
@@ -1450,7 +1393,7 @@ void updateCustomScore_Timed() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
  
-  if(intervalTime + inputSeconds==0 && interval==inputNumIntervals){
+  if(inputMinutes + inputSeconds==0 && intervalno ==inputNumIntervals){
     if(customTeamA > customTeamB){
       tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
       tft.setTextColor(0x07E0);  // Green
@@ -1487,7 +1430,6 @@ void updateCustomScore_Timed() {
       delay(2000);
       resetfinalCustomScore_Timed();
     }
-    inputMinutes = inputMinutesCopy;
   }
   else{
   displayCustomScoreScreen_Timed();
@@ -1523,24 +1465,23 @@ void displayCustomTimer() {
 void displayCustomStaticTimer(){
 
 
+  tft.setTextSize(4);
   int screenWidth = tft.width();
   int screenHeight = tft.height();
     tft.setCursor(120, 15);
     tft.setTextColor(0x0000);
-    tft.setTextSize(4);
-    if(minutes<10){
+    if(inputMinutes<10){
       tft.print("0");
     }
-    tft.print(minutes);
+    tft.print(inputMinutes);
     tft.print(":");
-    if (seconds < 10) {
+    if (inputSeconds < 10) {
         tft.print("0");  
     }
-    tft.print(seconds);
+    tft.print(inputSeconds);
     tft.setTextSize(2);
     tft.setCursor(120,70);
     tft.print(intervalno);
-    tft.setTextSize(4);
 }
 
 
@@ -1643,4 +1584,10 @@ void updateCustomScore_NonTimed() {
     displayCustomScoreScreen_NonTimed();
   }
 }
+
+
+
+
+
+
 

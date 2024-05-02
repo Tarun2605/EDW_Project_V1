@@ -480,6 +480,15 @@ void loop() {
     }
     if (receivedData.equals("HockeyChangeQuarter")) {
       // Serial.println("TableTennisTeamAInc");
+      Serial.println("Changing quarter");
+      setColor(255,0,100);
+      if(callAPI("https://edw-tfub.onrender.com/game/hockey/changeQuarter")){
+        setColor(0,255,0);
+      }
+    }
+    if (receivedData.equals("ResetAllData")) {
+      // Serial.println("TableTennisTeamAInc");
+      Serial.println("Changing quarter");
       setColor(255,0,100);
       if(callAPI("https://edw-tfub.onrender.com/game/hockey/changeQuarter")){
         setColor(0,255,0);

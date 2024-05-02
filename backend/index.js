@@ -75,6 +75,64 @@ app.get('/config/getAllData', async (req, res)=>{
         });
     }
 });
+app.get('/config/resetAllData', async (req, res)=>{
+    try {
+        console.log("Resetting all data");
+        const game= require('./models/gameModel');
+        const updateHockeyGame = await game.findOneAndUpdate(
+            { game: 'hockey' },
+            {
+                $set: {
+                    'gamedata.teamA.score': 0,
+                    'gamedata.teamB.score': 0,
+                    'gamedata.quarter': 1,
+                    'updatedAt': new Date().toISOString(),
+                }
+            },
+            { new: true }
+        );
+        const updatedTableTennisGame = await game.findOneAndUpdate(
+            { game: 'tableTennis' },
+            {
+                $set: {
+                    'gamedata.teamA.score': 0,
+                    'gamedata.teamA.set': 0,
+                    'gamedata.teamB.score': 0,
+                    'gamedata.teamB.set': 0
+                }
+            },
+            { new: true }
+        );
+        const updatedBadmintonGame = await game.findOneAndUpdate(
+            { game: 'badminton' },
+            {
+                $set: {
+                    'gamedata.teamA.score': 0,
+                    'gamedata.teamA.set': 0,
+                    'gamedata.teamB.score': 0,
+                    'gamedata.teamB.set': 0
+                }
+            },
+            { new: true }
+        );
+        
+        // console.log(gameData);
+        res.status(200);
+        res.send({
+            message: 'Data reset successfully',
+            gameData: [updateHockeyGame, updatedTableTennisGame, updatedBadmintonGame],
+            dateTime: new Date()
+        });
+        
+    } catch (error) {
+        console.log('Error occurred while resetting data ', error.message);
+        res.status(500);
+        res.send({
+            message: 'Error while resetting data',
+            dateTime: new Date()
+        });
+    }
+});
 app.use('/game/tableTennis', require('./routes/tableTennis'));
 app.use('/game/badminton', require('./routes/badminton'));
 app.use('/game/hockey', require('./routes/hockey'));

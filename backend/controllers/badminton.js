@@ -103,5 +103,6 @@ const teamBinc = async (req, res) => {
         console.log('Error occurred while updating score for Team B ', error.message);
     }
 }
+
 //#endregion
 module.exports = {teamAinc, teamBinc};

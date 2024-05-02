@@ -23,6 +23,7 @@ function App() {
           const fetchAllData = async () => {
             try {
               const response = await axios.get('https://edw-tfub.onrender.com/config/getAllData');
+              // const response = await axios.get('http://localhost:5000/config/getAllData');
               console.log('Data fetched successfully ', response);
               const gameData= await response?.data?.gameData;
               // console.log('Game Data ', gameData);
