@@ -3,16 +3,13 @@
 #include <Keypad.h>
 #include <ArduinoJson.h>
 
-
 #define LCD_CS A3
 #define LCD_CD A2
 #define LCD_WR A1
 #define LCD_RD A0
 #define LCD_RESET A4
 
-
 MCUFRIEND_kbv tft;
-
 
 const byte ROWS = 4; // Four rows
 const byte COLS = 4; // Four columns
@@ -25,13 +22,10 @@ char keys[ROWS][COLS] = {
 byte rowPins[ROWS] = {23, 25, 27, 29}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
 byte colPins[COLS] = {31,33,35,37}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins
 
-
 /* byte rowPins[ROWS] = {22,24,26,28}; // Rows 1 to 4 connected to R1, R2, R3, R4 pins
 byte colPins[COLS] = {30,32,34,36}; // Columns 1 to 4 connected to C1, C2, C3, C4 pins */
 
-
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
-
 
 int selectedGame = 0;
 bool inGameScreen = false;
@@ -40,7 +34,6 @@ bool HockeyActive = false;
 bool BadmintonActive = false;
 bool AddGameActive = false;
 
-
 int tabletennisTeamA = 0;  // Score for Team A in Tennis
 int tabletennisTeamB = 0;  // Score for Team B in Tennis
 int HockeyTeamA = 0;   // Score for Team A in Tennis
@@ -48,12 +41,10 @@ int HockeyTeamB = 0;   // Score for Team B in Tennis
 int BadmintonTeamA = 0;    // Score for Team A in Tennis
 int BadmintonTeamB = 0;    // Score for Team B in Tennis
 
-
 int setScoreA = 0;           // Set score for Team A
 int setScoreB = 0;           // Set score for Team B
 int BadmintonsetScoreA = 0;  // Set score for Team A
 int BadmintonsetScoreB = 0;  // Set score for Team B
-
 
 bool isPaused = true;
 unsigned long previousMillis = 0;
@@ -62,82 +53,62 @@ int minutes = 0;
 int seconds = 10;
 int quarter = 1; // Hockey Quarter
 
-
 bool lastpoint = true;  //true means player 1
 
-
 bool player1Serving = true;  //Player 1 is serving
-
 
                   /*
 
 
 
-
-
-
                   ADD GAME Variables
-       
-       
-       
+        
+        
+        
                   */
 enum GameType {
   TIMED,
   NON_TIMED,
 };
 
-
 GameType selectedGameType;
 
-
 //For Timed Sports
-
 
 int inputMinutes = 0;
 int inputMinutesCopy = 0;
 int inputSeconds = 0;
 
-
-int inputNumIntervals=0;
+int inputNumIntervals=0; 
 int intervalno=1;
-
 
 bool customisPaused = true;
 unsigned long custompreviousMillis = 0;
 unsigned long custominterval = 1000; // 1 second interval
-
 
 //For non timed sports
 int winningScore;
 int numGames;
 int numSets;
 
-
 int customTeamA = 0;  
 int customTeamB = 0;  
-int customGameScoreA = 0;          
-int customGameScoreB = 0;          
-int customSetScoreA = 0;          
-int customSetScoreB = 0;          
-
+int customGameScoreA = 0;           
+int customGameScoreB = 0;           
+int customSetScoreA = 0;           
+int customSetScoreB = 0;           
 
 int choice=0;
 bool gameAdded=false;
 
-
 /////////////////////////////////////////////////////////////
-
-
 
 
 const int NUM_GAMES = 4;
 
-
 String games[NUM_GAMES] = { "Table Tennis", "Badminton", "Hockey", "ADD GAME" };
 
-
 const uint16_t gameColors[NUM_GAMES] = { 0x7E0, 0xFF00, 0xF800, 0x001F };
-
 
 void setData(String data) {
   if (data.startsWith("SetData")) {
@@ -147,10 +118,8 @@ void setData(String data) {
   // Create a StaticJsonDocument with a capacity of 4096 bytes
   StaticJsonDocument<4096> doc;
 
-
   // Deserialize the JSON document
   DeserializationError error = deserializeJson(doc, data);
-
 
   // Test if parsing succeeds.
   if (error) {
@@ -159,11 +128,9 @@ void setData(String data) {
     return;
   }
 
-
   // Get the values from the JSON document
   const char* message = doc["message"]; // "Data fetched successfully"
   JsonArray gameData = doc["gameData"];
-
 
   for(JsonVariant v : gameData) {
     const char* _id = v["_id"]; // "662370b448ed5025aa3fd82c"
@@ -178,7 +145,6 @@ void setData(String data) {
     int setB = teamB["set"]; // 0
     const char* updatedAt = v["updatedAt"]; // "2024-04-20T07:37:24.482Z"
     int _v = v["_v"]; // 0
-
 
     // Update the global variables based on the game
     if (strcmp(game, "tableTennis") == 0) {
@@ -201,30 +167,42 @@ void setData(String data) {
     }
   }
 
-
   // const char* dateTime = doc["dateTime"]; // "2024-04-27T19:00:26.237Z"
   // Serial.println(dateTime);
 }
-
-
 
 
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
 
-
   tft.begin();
   tft.setRotation(1);
   tft.fillScreen(0x0000);
   tft.setTextSize(2);
 
+  tft.fillScreen(0); 
+  tft.setTextColor(0xAFFF); 
+  tft.setTextSize(3); 
+  
+  
+  int16_t x = 80; 
+  int16_t y =  80;
+  
+  tft.setCursor(x, y); 
+  tft.println("IoT Score");
+
+  x=60;
+  y=120;
+
+  tft.setCursor(x,y);
+  tft.println("Broadcaster");
+  delay(3000);
 
   if (!inGameScreen) {
     displayMenu();
   }
 }
-
 
 void loop() {
 if (Serial1.available()){
@@ -234,13 +212,10 @@ if (Serial1.available()){
     }
   }
 
-
   char key = keypad.getKey();
-
 
   if (key != NO_KEY) {
     switch (key) {
-
 
       case 'A':
         // Handle navigation key 'A' press (up)
@@ -251,12 +226,11 @@ if (Serial1.available()){
           }
         }
         if (inGameScreen) {
-     //////////////
+     ////////////// 
         } else {
           displayMenu();
         }
         break;
-
 
       case 'B':
         // Handle navigation key 'B' press (down)
@@ -266,14 +240,13 @@ if (Serial1.available()){
             selectedGame = 0;
           }
         }
-       
+        
         if (inGameScreen) {
          /////////////////
         } else {
           displayMenu();
         }
         break;
-
 
       case 'C':
         // Handle navigation key 'C' press (select)
@@ -319,8 +292,8 @@ if (Serial1.available()){
         displayMenu();
         break;
 
-
       case '*':
+        Serial1.println("ResetAllData");
         resetfinalTTScore();
         resetfinalBadmintonScore();
         resetfinalHockeyScore();
@@ -359,31 +332,27 @@ if (Serial1.available()){
     }
   }
 
-
   if(HockeyActive){
     unsigned long currentMillis = millis();
     if (key=='#') {
+      Serial1.println("HockeyChangeQuarter");
+      delay(1500);
          isPaused = !isPaused;
         Serial.println("Button pressed");
-        Serial1.println("HockeyChangeQuarter");
       delay(50); // Debounce delay
       }
-   
-
+    
 
     if (!isPaused && currentMillis - previousMillis >= interval) {
       // Update timer every second
       previousMillis = currentMillis;
 
-
       if (seconds == 0) {
         if (minutes == 0) {
           // Timer reached 0
-         
+          
           quarter++;
-          Serial.println("arduino is channging quarter");
           // Serial1.println("HockeyChangeQuarter");
-
 
           resetTimer();
           //displayHockeyScoreScreen();
@@ -405,7 +374,6 @@ if (Serial1.available()){
     }
   }
 
-
   if(AddGameActive && selectedGameType == TIMED){
     unsigned long currentMillis = millis();
     if (key=='#') {
@@ -413,13 +381,11 @@ if (Serial1.available()){
         Serial.println("Button pressed");
         delay(50); // Debounce delay
       }
-   
-
+    
 
     if (!customisPaused && currentMillis - custompreviousMillis >= custominterval) {
       // Update timer every second
       custompreviousMillis = currentMillis;
-
 
       if (inputSeconds == 0) {
         if (inputMinutes == 0) {
@@ -443,7 +409,7 @@ if (Serial1.available()){
       displayCustomStaticTimer();
     }
   }
- 
+  
   if (tableTennisActive) {
     // Increment score for Team A in Tennis
     if (key == 'A') {
@@ -452,7 +418,6 @@ if (Serial1.available()){
         Serial1.println("TableTennisTeamAInc");
         updateTennisScore();
     }
-
 
     // Increment score for Team B in Tennis
     if (key == 'B') {
@@ -463,7 +428,6 @@ if (Serial1.available()){
     }
   }
 
-
   else if (BadmintonActive) {
     // Increment score for Team A in Tennis
     if (key == 'A') {
@@ -473,7 +437,6 @@ if (Serial1.available()){
         lastpoint=true;
         updateBadmintonScore();
     }
-
 
     // Increment score for Team B in Tennis
     if (key == 'B') {
@@ -495,7 +458,6 @@ if (Serial1.available()){
       }
     }
 
-
     // Increment score for Team B in Tennis
     if (key=='B') {
       delay(50);  // Debounce delay
@@ -509,12 +471,10 @@ if (Serial1.available()){
       updateHockeyScore();
     }
 
-
   }
   else if(AddGameActive){
     if(!gameAdded){
       char key = keypad.getKey();
-
 
       if (key != NO_KEY) {
         addGameMenuHandler(key); // Handle key presses
@@ -530,7 +490,6 @@ if (Serial1.available()){
           }
         }
 
-
         // Increment score for Team B in Tennis
         if (key=='B') {
           delay(50);  // Debounce delay
@@ -543,7 +502,6 @@ if (Serial1.available()){
           updateCustomScore_Timed();
         }
 
-
       }
       else if(selectedGameType == NON_TIMED){
         if (key == 'A') {
@@ -552,7 +510,6 @@ if (Serial1.available()){
             updateCustomScore_NonTimed();
         }
 
-
         // Increment score for Team B in Tennis
         if (key == 'B') {
           delay(50);  // Debounce delay
@@ -560,28 +517,23 @@ if (Serial1.available()){
             updateCustomScore_NonTimed();
         }
 
-
       }
     }
   }  
 }
-
 
 // Function to display the menu
 void displayMenu() {
   tft.setTextSize(2);
   tft.fillScreen(0x0000);
 
-
   int menuWidth = 220;
   int menuHeight = NUM_GAMES * 30 + 20;
   int menuX = (tft.width() - menuWidth) / 2;
   int menuY = (tft.height() - menuHeight) / 2;
 
-
   int borderColor = 0xFFFF;
   tft.drawRect(menuX, menuY, menuWidth, menuHeight, borderColor);
-
 
   for (int i = 0; i < NUM_GAMES; i++) {
     if (selectedGame == i && !inGameScreen) {
@@ -594,25 +546,20 @@ void displayMenu() {
   }
 }
 
-
         /*ADD GAME MENU FUNCTIONS*/
-
 
 void displayAddGameMenu() {
   tft.setTextSize(2);
   tft.fillScreen(0x0000);
-
 
   int menuWidth = 280;
   int menuHeight = 200;
   int menuX = (tft.width() - menuWidth) / 2;
   int menuY = (tft.height() - menuHeight) / 2 ;
 
-
   int borderColor = 0xFFFF;
   tft.drawRect(menuX, menuY, menuWidth, menuHeight, borderColor);
   tft.setTextColor(0xFFFF);
-
 
   // Prompt for game type selection
   tft.setCursor(menuX+10,menuY+20);
@@ -624,38 +571,28 @@ void displayAddGameMenu() {
 }
 
 
-
-
 void displayTimedGameConfigMenu() {
   tft.fillScreen(0x0000); // Clear the screen
 
-
   tft.setTextColor(0xFFFF); // White text color
   tft.setTextSize(2);
-
 
   // Prompt for game duration
   tft.setCursor(10, 20);
   tft.println("Enter game duration(min) :");
 
-
   inputMinutes = getIntegerInput();
   inputMinutesCopy= inputMinutes;
-
 
   // Prompt for number of intervals (if applicable)
   tft.setCursor(10, 100);
   tft.println("Enter number of intervals:");
 
-
   inputNumIntervals = getIntegerInput();
-
 
   displayConfirmationScreen();
 
-
   choice = getYesNoInput();
-
 
   if(choice==1){
     gameAdded=true;
@@ -666,44 +603,36 @@ void displayTimedGameConfigMenu() {
     tft.fillScreen(0x0000);
     tft.print("Tu likhega iska code?");
   }
- 
+  
 }
 
-
 void displayNonTimedGameConfigMenu() {
- 
+  
   tft.fillScreen(0x0000); // Clear the screen
-
 
   tft.setTextColor(0xFFFF); // White text color
   tft.setTextSize(2);
 
-
   // Prompt for game duration
-  tft.setCursor(10, 20);
+  tft.setCursor(10, 20); 
   tft.println("Enter number of points in a Game: ");
 
-
   winningScore = getIntegerInput();
-
 
   // Prompt for number of intervals (if applicable)
   tft.setCursor(10, 100);
   tft.println("Enter the number of Games in a Set: ");
- 
+  
   numGames = getIntegerInput();
-
 
   tft.setCursor(10, 180);
   tft.println("Sets required to win: ");
- 
+  
   numSets = getIntegerInput();
- 
+  
   displayConfirmationScreen();
 
-
   choice = getYesNoInput();
-
 
   if(choice==1){
     gameAdded =true;
@@ -716,7 +645,6 @@ void displayNonTimedGameConfigMenu() {
   }
 }
 
-
 int getIntegerInput() {
   String input = "";
   char key;
@@ -728,10 +656,8 @@ int getIntegerInput() {
     }
   } while (key != '#'); // Assume # key signifies end of input
 
-
   return input.toInt();
 }
-
 
 int getYesNoInput() {
   String input = "";
@@ -744,11 +670,8 @@ int getYesNoInput() {
     }
   } while (key != '#'); // Assume # key signifies end of input
 
-
   return input.toInt();
 }
-
-
 
 
 void addGameMenuHandler(char key) {
@@ -761,10 +684,16 @@ void addGameMenuHandler(char key) {
       selectedGameType = NON_TIMED;
       displayNonTimedGameConfigMenu();
       break;
-    case 'A':
-      // Return to main menu or perform other actions
-      break;
     case 'B':
+      // Cancel operation or return to main menu
+      break;
+    case 'C':
+      // Cancel operation or return to main menu
+      break;
+    case 'D':
+      // Cancel operation or return to main menu
+      break;
+    case 'E':
       // Cancel operation or return to main menu
       break;
     default:
@@ -773,70 +702,59 @@ void addGameMenuHandler(char key) {
   }
 }
 
-
 void displayConfirmationScreen(){
-
 
   tft.fillScreen(0x0000);
   tft.setTextColor(0xFFFF);
   tft.setTextSize(2);
   tft.setCursor(10,20);
 
-
   tft.println("Please Confirm Game Details(Yes(1) / No(2)) : ");
-
 
   if(selectedGameType == TIMED){
     tft.setCursor(10,60);
     tft.print("Game Type: TIMED");
-       
+        
     tft.setCursor(10,100);
     tft.print("Duration: ");
     tft.print(inputMinutes);
-   
+    
     tft.setCursor(10,140);
     tft.print("Intervals: ");
     tft.print(inputNumIntervals);
-   
+    
   }
   else{
     tft.setCursor(10,60);
     tft.print("Game Type: NON_TIMED");
-   
+    
     tft.setCursor(10,100);
     tft.print("Winning Points: ");
     tft.print(winningScore);
-   
+    
     tft.setCursor(10,140);
     tft.print("Games: ");
     tft.print(numGames);
-
 
     tft.setCursor(10,180);
     tft.print("Sets: ");
     tft.print(numSets);
 
-
   }
-
 
 }
 
-
 //Scoring Functions
-
 
 // Function to display the tennis score screen
 void displayTennisScoreScreen() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
 
-
   int teamAWidth = screenWidth / 2;
   int teamAX = 0;
   int teamAY = 20;
   int teamAHeight = screenHeight - teamAY;
-
 
   int teamBWidth = screenWidth / 2;
   int teamBX = screenWidth / 2;
@@ -853,9 +771,7 @@ void displayTennisScoreScreen() {
   uint16_t backgroundColor = 0x0000;  // Black
   uint16_t borderColor = 0x0000;      // Black
 
-
   tft.fillRect(0, 0, screenWidth, screenHeight, backgroundColor);
-
 
   tft.fillRect(teamAX, teamAY, teamAWidth, teamAHeight, teamAColor);
   tft.setTextColor(0x0000);  // Black
@@ -868,7 +784,6 @@ void displayTennisScoreScreen() {
   tft.setCursor(teamAX + 10, teamAY + 120);
   tft.println("Set: " + String(setScoreA));
 
-
   tft.fillRect(teamBX, teamBY, teamBWidth, teamBHeight, teamBColor);
   tft.setTextColor(0x0000);  // Black
   tft.setTextSize(3);
@@ -880,10 +795,8 @@ void displayTennisScoreScreen() {
   tft.setCursor(teamBX + 10, teamBY + 120);
   tft.println("Set: " + String(setScoreB));
 
-
   tft.fillRect(screenWidth / 2 - 2, 0, 4, screenHeight, borderColor);
 }
-
 
 void updateTennisScore() {
   int screenWidth = tft.width();
@@ -899,7 +812,6 @@ void updateTennisScore() {
     setScoreB++;
     resetTennisScore();
   } else {
-
 
     if ((tabletennisTeamA
          + tabletennisTeamB)
@@ -918,7 +830,6 @@ void updateTennisScore() {
     }
   }
   if (setScoreA == 2) {
-
 
     tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
     tft.setTextColor(0x07E0);  // Green
@@ -948,18 +859,15 @@ void updateTennisScore() {
   }
 }
 
-
 // Function to display the badminton score screen
 void displayBadmintonScoreScreen() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
 
-
   int teamAWidth = screenWidth / 2;
   int teamAX = 0;
   int teamAY = 20;
   int teamAHeight = screenHeight - teamAY;
-
 
   int teamBWidth = screenWidth / 2;
   int teamBX = screenWidth / 2;
@@ -976,9 +884,7 @@ void displayBadmintonScoreScreen() {
   uint16_t backgroundColor = 0x0000;  // Black
   uint16_t borderColor = 0x0000;      // Black
 
-
   tft.fillRect(0, 0, screenWidth, screenHeight, backgroundColor);
-
 
   tft.fillRect(teamAX, teamAY, teamAWidth, teamAHeight, teamAColor);
   tft.setTextColor(0x0000);  // Black
@@ -991,7 +897,6 @@ void displayBadmintonScoreScreen() {
   tft.setCursor(teamAX + 10, teamAY + 120);
   tft.println("Set: " + String(BadmintonsetScoreA));
 
-
   tft.fillRect(teamBX, teamBY, teamBWidth, teamBHeight, teamBColor);
   tft.setTextColor(0x0000);  // Black
   tft.setTextSize(3);
@@ -1003,10 +908,8 @@ void displayBadmintonScoreScreen() {
   tft.setCursor(teamBX + 10, teamBY + 120);
   tft.println("Set: " + String(BadmintonsetScoreB));
 
-
   tft.fillRect(screenWidth / 2 - 2, 0, 4, screenHeight, borderColor);
 }
-
 
 void updateBadmintonScore() {
   int screenWidth = tft.width();
@@ -1025,10 +928,8 @@ void updateBadmintonScore() {
         player1Serving=false;
       }
 
-
   }
   if (BadmintonsetScoreA == 2) {
-
 
     tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
     tft.setTextColor(0x07E0);  // Green
@@ -1058,30 +959,25 @@ void updateBadmintonScore() {
   }
 }
 
-
 // Function to display the hockey score screen
   void displayHockeyScoreScreen() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
-
 
   int teamAWidth = screenWidth / 2;
   int teamAX = 0;
   int teamAY = 120;
   int teamAHeight = screenHeight - teamAY;
 
-
   int teamBWidth = screenWidth / 2;
   int teamBX = screenWidth / 2;
   int teamBY = 120;
   int teamBHeight = screenHeight - teamBY;
 
-
   int timerWidth = screenWidth;
   int timerX=0;
-  int timerY=0;
+  int timerY=0; 
   int timerHeight = screenHeight - timerY;
-
 
   inGameScreen = true;
   uint16_t teamAColor = 0xFFFF;  // White
@@ -1095,17 +991,13 @@ void updateBadmintonScore() {
   tft.setCursor(timerX + 10, timerY + 20);
   tft.println("Time: ");
 
-
   tft.setTextSize(2);
   tft.setCursor(timerX+10, timerY+70);
   tft.println("Quarter: ");
 
-
   tft.fillRect(0, 120, screenWidth, 4, borderColor);
 
-
   tft.fillRect(0, 120, screenWidth, screenHeight/2, backgroundColor);
-
 
   tft.fillRect(teamAX, teamAY, teamAWidth, teamAHeight, teamAColor);
   tft.setTextColor(0x0000);  // Black
@@ -1115,8 +1007,7 @@ void updateBadmintonScore() {
   tft.setTextSize(2);
   tft.setCursor(teamAX + 10, teamAY + 60);
   tft.println("Score: " + String(HockeyTeamA));
- 
-
+  
 
   tft.fillRect(teamBX, teamBY, teamBWidth, teamBHeight, teamBColor);
   tft.setTextColor(0x0000);  // Black
@@ -1127,20 +1018,16 @@ void updateBadmintonScore() {
   tft.setCursor(teamBX + 10, teamBY + 60);
   tft.println("Score: " + String(HockeyTeamB));
 
-
   tft.fillRect(screenWidth / 2 - 2, 120, 4, screenHeight, borderColor);
-
 
   tft.setTextSize(4);
 }
 
-
 void updateHockeyScore() {
-
 
   int screenWidth = tft.width();
   int screenHeight = tft.height();
- 
+  
   if(minutes+seconds==0 && quarter==4){
     if(HockeyTeamA > HockeyTeamB){
       tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
@@ -1182,17 +1069,14 @@ void updateHockeyScore() {
   else{
     displayHockeyScoreScreen();
   }
- 
+  
 }
-
 
 //Table Tennis Resetting
 void resetTennisScore() {
   tabletennisTeamA = 0;
   tabletennisTeamB = 0;
 }
-
-
 
 
 void resetfinalTTScore() {
@@ -1202,14 +1086,11 @@ void resetfinalTTScore() {
   player1Serving = true;
 }
 
-
 //Badminton Resetting
 void resetBadmintonScore() {
   BadmintonTeamA = 0;
   BadmintonTeamB = 0;
 }
-
-
 
 
 void resetfinalBadmintonScore() {
@@ -1220,15 +1101,12 @@ void resetfinalBadmintonScore() {
 }
 
 
-
-
 void resetfinalHockeyScore() {
   HockeyTeamA = 0;
   HockeyTeamB = 0;
   resetTimer();
   quarter=1;
 }
-
 
 void resetfinalCustomScore_Timed() {
   customTeamA = 0;
@@ -1237,13 +1115,11 @@ void resetfinalCustomScore_Timed() {
   intervalno=1;
 }
 
-
 void resetCustomTimer(){
   inputMinutes=inputMinutesCopy;
   inputSeconds = 0;
   customisPaused= true;
 }
-
 
 void resetTimer(){
   minutes=0;
@@ -1251,19 +1127,16 @@ void resetTimer(){
   isPaused=true;
 }
 
-
 void resetCustomScore_NonTimed() {
   customTeamA = 0;
   customTeamB = 0;
 }
-
 
 void resetfinalCustomScore_NonTimed() {
   resetTennisScore();
   customSetScoreA = 0;
   customSetScoreB = 0;
 }
-
 
 // Function to display the timer
 void displayTimer() {
@@ -1282,16 +1155,13 @@ void displayTimer() {
     }
     tft.print(seconds);
 
-
     tft.setTextSize(2);
     tft.setCursor(120,70);
     tft.print(quarter);
     tft.setTextSize(4);
 }
 
-
 void displayStaticTimer(){
-
 
   int screenWidth = tft.width();
   int screenHeight = tft.height();
@@ -1312,29 +1182,24 @@ void displayStaticTimer(){
     tft.setTextSize(4);
 }
 
-
  void displayCustomScoreScreen_Timed() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
-
 
   int teamAWidth = screenWidth / 2;
   int teamAX = 0;
   int teamAY = 120;
   int teamAHeight = screenHeight - teamAY;
 
-
   int teamBWidth = screenWidth / 2;
   int teamBX = screenWidth / 2;
   int teamBY = 120;
   int teamBHeight = screenHeight - teamBY;
 
-
   int timerWidth = screenWidth;
   int timerX=0;
-  int timerY=0;
+  int timerY=0; 
   int timerHeight = screenHeight - timerY;
-
 
   inGameScreen = true;
   uint16_t teamAColor = 0xFFFF;  // White
@@ -1348,17 +1213,13 @@ void displayStaticTimer(){
   tft.setCursor(timerX + 10, timerY + 20);
   tft.println("Time: ");
 
-
   tft.setTextSize(2);
   tft.setCursor(timerX+10, timerY+70);
   tft.println("Interval: ");
 
-
   tft.fillRect(0, 120, screenWidth, 4, borderColor);
 
-
   tft.fillRect(0, 120, screenWidth, screenHeight/2, backgroundColor);
-
 
   tft.fillRect(teamAX, teamAY, teamAWidth, teamAHeight, teamAColor);
   tft.setTextColor(0x0000);  // Black
@@ -1368,8 +1229,7 @@ void displayStaticTimer(){
   tft.setTextSize(2);
   tft.setCursor(teamAX + 10, teamAY + 60);
   tft.println("Score: " + String(customTeamA));
- 
-
+  
 
   tft.fillRect(teamBX, teamBY, teamBWidth, teamBHeight, teamBColor);
   tft.setTextColor(0x0000);  // Black
@@ -1380,19 +1240,15 @@ void displayStaticTimer(){
   tft.setCursor(teamBX + 10, teamBY + 60);
   tft.println("Score: " + String(customTeamB));
 
-
   tft.fillRect(screenWidth / 2 - 2, 120, 4, screenHeight, borderColor);
-
 
 }
 
-
 void updateCustomScore_Timed() {
-
 
   int screenWidth = tft.width();
   int screenHeight = tft.height();
- 
+  
   if(inputMinutes + inputSeconds==0 && intervalno ==inputNumIntervals){
     if(customTeamA > customTeamB){
       tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
@@ -1436,7 +1292,6 @@ void updateCustomScore_Timed() {
   }
 }
 
-
 void displayCustomTimer() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
@@ -1454,16 +1309,13 @@ void displayCustomTimer() {
     }
     tft.print(inputSeconds);
 
-
     tft.setTextSize(2);
     tft.setCursor(120,70);
     tft.print(intervalno);
     tft.setTextSize(4);
 }
 
-
 void displayCustomStaticTimer(){
-
 
   tft.setTextSize(4);
   int screenWidth = tft.width();
@@ -1484,17 +1336,14 @@ void displayCustomStaticTimer(){
     tft.print(intervalno);
 }
 
-
 void displayCustomScoreScreen_NonTimed() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
-
 
   int teamAWidth = screenWidth / 2;
   int teamAX = 0;
   int teamAY = 20;
   int teamAHeight = screenHeight - teamAY;
-
 
   int teamBWidth = screenWidth / 2;
   int teamBX = screenWidth / 2;
@@ -1504,13 +1353,10 @@ void displayCustomScoreScreen_NonTimed() {
   uint16_t teamAColor = 0xFFFF;  // White
   uint16_t teamBColor = 0xFFFF;  // White
 
-
   uint16_t backgroundColor = 0x0000;  // Black
   uint16_t borderColor = 0x0000;      // Black
 
-
   tft.fillRect(0, 0, screenWidth, screenHeight, backgroundColor);
-
 
   tft.fillRect(teamAX, teamAY, teamAWidth, teamAHeight, teamAColor);
   tft.setTextColor(0x0000);  // Black
@@ -1523,7 +1369,6 @@ void displayCustomScoreScreen_NonTimed() {
   tft.setCursor(teamAX + 10, teamAY + 120);
   tft.println("Set: " + String(customSetScoreA));
 
-
   tft.fillRect(teamBX, teamBY, teamBWidth, teamBHeight, teamBColor);
   tft.setTextColor(0x0000);  // Black
   tft.setTextSize(3);
@@ -1535,10 +1380,8 @@ void displayCustomScoreScreen_NonTimed() {
   tft.setCursor(teamBX + 10, teamBY + 120);
   tft.println("Set: " + String(customSetScoreB));
 
-
   tft.fillRect(screenWidth / 2 - 2, 0, 4, screenHeight, borderColor);
 }
-
 
 void updateCustomScore_NonTimed() {
   int screenWidth = tft.width();
@@ -1553,9 +1396,8 @@ void updateCustomScore_NonTimed() {
   } else if (customTeamB >= winningScore && customTeamB - customTeamA >= 2) {
     customSetScoreB++;
     resetCustomScore_NonTimed();
-  }
+  } 
   if (customSetScoreA == numSets) {
-
 
     tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
     tft.setTextColor(0x07E0);  // Green
@@ -1584,10 +1426,4 @@ void updateCustomScore_NonTimed() {
     displayCustomScoreScreen_NonTimed();
   }
 }
-
-
-
-
-
-
 
