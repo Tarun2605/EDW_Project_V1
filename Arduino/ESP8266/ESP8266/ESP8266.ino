@@ -428,7 +428,8 @@ void setup() {
   Serial.println("Access Point started");
   Serial.print("IP Address: ");
   Serial.println(WiFi.softAPIP());
-  setColor(255,0,0);
+  // setColor(255,0,0);
+  setColor(0,0,255);
   // Start the server
   server.on("/", handleRoot);
   server.on("/score", handleScorePage);
@@ -488,9 +489,10 @@ void loop() {
     }
     if (receivedData.equals("ResetAllData")) {
       // Serial.println("TableTennisTeamAInc");
-      Serial.println("Changing quarter");
+      Serial.println("Reset Data");
       setColor(255,0,100);
-      if(callAPI("https://edw-tfub.onrender.com/game/hockey/changeQuarter")){
+      if(callAPI("https://edw-tfub.onrender.com/config/resetAllData")){
+        Serial.println("Done resetting");
         setColor(0,255,0);
       }
     }
