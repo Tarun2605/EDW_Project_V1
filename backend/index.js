@@ -115,7 +115,9 @@ app.get('/config/resetAllData', async (req, res)=>{
             },
             { new: true }
         );
-        
+        sendViaSocket("ResetScore", {
+            data: [updateHockeyGame, updatedTableTennisGame, updatedBadmintonGame]
+        });
         // console.log(gameData);
         res.status(200);
         res.send({

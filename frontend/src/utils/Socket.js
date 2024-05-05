@@ -20,6 +20,20 @@ export default function SocketReciever() {
         setBootUp(true);
     }
     );
+    socket.on('ResetScore', (data) => {
+        console.log('Reset data received', data);
+        setTableTennisTeamA({ score: 0, set: 0 });
+        setTableTennisTeamB({ score: 0, set: 0 });
+        setBadmintonTeamA({ score: 0, set: 0 });
+        setBadmintonTeamB({ score: 0, set: 0 });
+        setHockeyTeamA({ score: 0 });
+        setHockeyTeamB({ score: 0 });
+        setHockeyQuarter(1);
+        setHockeyTime(0);
+        setHockeyStart(false);
+        setTeamWin("None");
+    }
+    );
     socket.on('TennisScoreUpdate', (score) => {
         try {
             console.log(teamWin);
