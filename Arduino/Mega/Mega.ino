@@ -90,6 +90,7 @@ unsigned long custominterval = 1000; // 1 second interval
 int winningScore;
 int numGames;
 int numSets;
+bool QuarterEnded=false;
 
 int customTeamA = 0;  
 int customTeamB = 0;  
@@ -175,14 +176,14 @@ void setData(String data) {
 void setup() {
   Serial.begin(9600);
   Serial1.begin(9600);
-
+  Serial2.begin(9600);
   tft.begin();
   tft.setRotation(1);
   tft.fillScreen(0x0000);
   tft.setTextSize(2);
 
   tft.fillScreen(0); 
-  tft.setTextColor(0xAFFF); 
+  tft.setTextColor(0x07FF); 
   tft.setTextSize(3); 
   
   
@@ -205,8 +206,11 @@ void setup() {
 }
 
 void loop() {
-if (Serial1.available()){
+if (Serial1.available() || Serial2.available()){
     String data = Serial1.readString(); // read it and store it in 'data'
+    if (!data){
+      data=Serial2.readString();
+    }
     if (data.startsWith("{")) {
         setData(data);
     }
@@ -294,6 +298,7 @@ if (Serial1.available()){
 
       case '*':
         Serial1.println("ResetAllData");
+        Serial2.println("ResetAllData");
         resetfinalTTScore();
         resetfinalBadmintonScore();
         resetfinalHockeyScore();
@@ -336,6 +341,7 @@ if (Serial1.available()){
     unsigned long currentMillis = millis();
     if (key=='#') {
       Serial1.println("HockeyChangeQuarter");
+      Serial2.println("HockeyChangeQuarter");
       delay(1500);
          isPaused = !isPaused;
         Serial.println("Button pressed");
@@ -391,6 +397,7 @@ if (Serial1.available()){
         if (inputMinutes == 0) {
           // Timer reached 0
           intervalno++;
+
           resetCustomTimer();
           if(intervalno>inputNumIntervals){
             intervalno=1;
@@ -416,6 +423,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
         tabletennisTeamA++;
         Serial1.println("TableTennisTeamAInc");
+        Serial2.println("TableTennisTeamAInc");
         updateTennisScore();
     }
 
@@ -424,6 +432,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
         tabletennisTeamB++;
          Serial1.println("TableTennisTeamBInc");
+         Serial2.println("TableTennisTeamBInc");
         updateTennisScore();
     }
   }
@@ -434,6 +443,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
         BadmintonTeamA++;
         Serial1.println("BadmintonTeamAInc");
+        Serial2.println("BadmintonTeamAInc");
         lastpoint=true;
         updateBadmintonScore();
     }
@@ -443,6 +453,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
         BadmintonTeamB++;
         Serial1.println("BadmintonTeamBInc");
+        Serial2.println("BadmintonTeamBInc");
         lastpoint= false;
         updateBadmintonScore();
     }
@@ -453,6 +464,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
         Serial1.println("HockeyTeamAInc");
+        Serial2.println("HockeyTeamAInc");
         HockeyTeamA++;
         updateHockeyScore();
       }
@@ -463,6 +475,7 @@ if (Serial1.available()){
       delay(50);  // Debounce delay
       if (minutes + seconds>0 && !isPaused) {
         Serial1.println("HockeyTeamBInc");
+        Serial2.println("HockeyTeamBInc");
         HockeyTeamB++;
         updateHockeyScore();
       }
@@ -648,16 +661,39 @@ void displayNonTimedGameConfigMenu() {
 int getIntegerInput() {
   String input = "";
   char key;
+  uint16_t charWidth, charHeight;
+  int16_t x1, y1;
+  uint16_t w, h;
+
   do {
     key = keypad.getKey();
     if (key >= '0' && key <= '9') {
       input += key;
       tft.print(key);
-    }
+    } /* else if (key == '*') { // Handle backspace
+      if (input.length() > 0) {
+        input.remove(input.length() - 1);
+        // Get the width and height of the last printed character
+        char lastChar = input.charAt(input.length() - 1);
+        tft.getTextBounds(&lastChar, 0, 0, &x1, &y1, &w, &h);
+        charWidth = w;
+        charHeight = h;
+        // Calculate the coordinates of the rectangle to clear
+        int16_t x = tft.getCursorX() - charWidth;
+        int16_t y = tft.getCursorY() - charHeight;
+        // Clear the area occupied by the last character
+        tft.fillRect(x, y, charWidth, charHeight, tft.color565(0,0,0)); // White color fills the area
+        // Move the cursor back to the position before the last character
+        tft.setCursor(x, y);
+      }
+    } */
   } while (key != '#'); // Assume # key signifies end of input
 
   return input.toInt();
 }
+
+
+
 
 int getYesNoInput() {
   String input = "";
@@ -684,17 +720,9 @@ void addGameMenuHandler(char key) {
       selectedGameType = NON_TIMED;
       displayNonTimedGameConfigMenu();
       break;
-    case 'B':
-      // Cancel operation or return to main menu
-      break;
-    case 'C':
-      // Cancel operation or return to main menu
-      break;
     case 'D':
-      // Cancel operation or return to main menu
-      break;
-    case 'E':
-      // Cancel operation or return to main menu
+      AddGameActive = false;
+      displayMenu();
       break;
     default:
       // Handle other keys if needed
@@ -1249,7 +1277,7 @@ void updateCustomScore_Timed() {
   int screenWidth = tft.width();
   int screenHeight = tft.height();
   
-  if(inputMinutes + inputSeconds==0 && intervalno ==inputNumIntervals){
+  
     if(customTeamA > customTeamB){
       tft.fillRect(0, 0, screenWidth, screenHeight, 0x0000);
       tft.setTextColor(0x07E0);  // Green
@@ -1286,7 +1314,7 @@ void updateCustomScore_Timed() {
       delay(2000);
       resetfinalCustomScore_Timed();
     }
-  }
+  
   else{
   displayCustomScoreScreen_Timed();
   }
@@ -1350,8 +1378,8 @@ void displayCustomScoreScreen_NonTimed() {
   int teamBY = 20;
   int teamBHeight = screenHeight - teamBY;
   inGameScreen = true;
-  uint16_t teamAColor = 0xFFFF;  // White
-  uint16_t teamBColor = 0xFFFF;  // White
+  uint16_t teamAColor = 0x07FF;  // White
+  uint16_t teamBColor = 0x07FF;  // White
 
   uint16_t backgroundColor = 0x0000;  // Black
   uint16_t borderColor = 0x0000;      // Black
