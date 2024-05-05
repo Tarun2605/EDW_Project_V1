@@ -24,7 +24,7 @@ export default function TableTennis(){
           </div>
           <div className='TableTennis-team-cont'>
             <div className='TableTennis-team-heading-cont'>
-              Team A
+              Team B
             </div>
             <div className='TableTennis-team-score-cont'>
                 <div className='TableTennis-score-cont'>
