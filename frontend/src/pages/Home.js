@@ -24,7 +24,7 @@ export default function Home(){
       }
       {
         selectedGame == 'hockey' ? (
-          (teamWin =="A" || teamWin=="B") ? <TeamWin team={teamWin}/> : <Hockey/>
+          (teamWin =="A" || teamWin=="B" || teamWin=="Both") ? <TeamWin team={teamWin}/> : <Hockey/>
         ) : null
       }
     {/* <TeamWin team='A'/> */}
