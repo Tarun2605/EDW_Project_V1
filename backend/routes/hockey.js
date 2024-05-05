@@ -33,7 +33,7 @@ router.get('/teamA/inc', (req, res) => {
 //#region Team B
 router.get('/teamB/inc', (req, res) => {
     try {
-        const {teamBinc} = require('../controllers/tableTennis');
+        const {teamBinc} = require('../controllers/hockey');
         teamBinc(req, res);
     } catch (error) {
         res.status(500);
